@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
+import '../firebase_options.dart';
 import 'almacen/almacen_binarios.dart';
 import 'sync/outbox_store.dart';
 import 'sync/sync_service.dart';
@@ -21,11 +22,10 @@ class Servicios {
 
 /// Arranque de la aplicación. Se llama desde main() antes de runApp().
 ///
-/// Tras ejecutar `flutterfire configure`, sustituir la llamada sin opciones
-/// por `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`.
-/// En web es obligatorio: sin opciones explícitas el SDK no arranca.
+/// `options` es obligatorio en web: sin él el SDK no sabe a qué proyecto
+/// conectar y falla en silencio dentro de una promesa de JavaScript.
 Future<Servicios> inicializar() async {
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Persistencia de documentos. Es lo que hace que las lecturas y escrituras
   // de Firestore funcionen contra la caché local sin cobertura.
