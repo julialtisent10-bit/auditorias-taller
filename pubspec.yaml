@@ -1,0 +1,55 @@
+name: audit_app
+description: Auditorías operativas en talleres de vehículo industrial.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Estado
+  flutter_riverpod: ^2.5.1
+
+  # Backend + offline
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.0
+  firebase_auth: ^5.3.0
+  firebase_storage: ^12.3.0
+
+  # Almacén local de binarios y cola de subida.
+  # Hive en lugar de SQLite: la app se despliega como PWA y en el navegador no
+  # hay SQLite ni sistema de ficheros. Hive usa IndexedDB en web y ficheros en
+  # móvil, con la misma API en ambos.
+  hive_ce: ^2.10.0
+  hive_ce_flutter: ^2.2.0
+  connectivity_plus: ^6.0.5
+
+  # Evidencias. El redimensionado va con `image` (Dart puro) y no con
+  # flutter_image_compress, que es código nativo y no existe en web.
+  image_picker: ^1.1.2
+  image: ^4.2.0
+
+  # Informe
+  pdf: ^3.11.1
+  printing: ^5.13.2            # en web abre el diálogo de impresión/descarga
+  signature: ^5.5.0            # firma manuscrita del auditor y del gerente
+
+  uuid: ^4.5.1
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/plantillas/
+    - assets/branding/
+    # Noto Sans (SIL Open Font License, ver assets/fonts/OFL.txt). Se incrusta
+    # en el PDF porque las fuentes internas del formato no cubren Unicode.
+    - assets/fonts/

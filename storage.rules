@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Evidencias, firmas e informes. Solo usuarios autenticados.
+//
+// El límite de tamaño no es cosmético: sin él, un bug de compresión que suba
+// la foto original de 12 MP en lugar de la comprimida se traduce en factura
+// de Storage y en subidas que nunca terminan por 4G.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /auditorias/{auditoriaId}/{resto=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 8 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+    }
+  }
+}

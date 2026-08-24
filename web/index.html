@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="description" content="Auditorías operativas en talleres de vehículo industrial.">
+
+  <!-- viewport-fit=cover evita la banda blanca bajo la barra de inicio del
+       iPhone cuando la app se abre desde la pantalla de inicio. -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- Sin estas dos etiquetas, iOS abre la app dentro de Safari con su barra
+       de direcciones. Con ellas se abre a pantalla completa, como una app. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Auditorías">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#0E4F8B">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Auditorías de taller</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0E4F8B; }
+    /* Pantalla de carga propia: el arranque de Flutter web tarda unos
+       segundos la primera vez y una pantalla en blanco parece un cuelgue. */
+    #arranque {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: #0E4F8B; color: #fff; z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .3s ease;
+    }
+    #arranque img { width: 76px; height: 76px; }
+    #arranque p { margin: 0; font-size: 14px; opacity: .85; }
+    .oculto { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="arranque">
+    <img src="icons/Icon-192.png" alt="">
+    <p>Cargando auditorías…</p>
+  </div>
+
+  <script>
+    // Almacenamiento persistente. Sin esto, el navegador puede desalojar
+    // IndexedDB cuando le falte espacio, y ahí es donde viven las fotos que
+    // aún no se han subido. No todos los navegadores lo conceden, pero
+    // pedirlo es gratis y en iOS mejora bastante las probabilidades.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted().then(function (yaEs) {
+        if (!yaEs) { navigator.storage.persist(); }
+      });
+    }
+
+    window.addEventListener('flutter-first-frame', function () {
+      var pantalla = document.getElementById('arranque');
+      if (!pantalla) return;
+      pantalla.classList.add('oculto');
+      setTimeout(function () { pantalla.remove(); }, 350);
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

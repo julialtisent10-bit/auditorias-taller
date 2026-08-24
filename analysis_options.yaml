@@ -1,0 +1,24 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Un `await` sin comprobar `mounted` antes de tocar el contexto es una
+    # fuente real de crashes en esta app: casi todo el flujo es asíncrono.
+    use_build_context_synchronously: error
+    invalid_annotation_target: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_final_locals
+    - unawaited_futures

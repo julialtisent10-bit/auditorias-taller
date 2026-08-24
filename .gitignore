@@ -1,0 +1,26 @@
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# pubspec.lock SI se versiona (es una app, no un paquete publicado): fija las
+# versiones exactas para que el build de GitHub Actions use las mismas
+# dependencias que se probaron en local.
+
+# firebase_options.dart para la plataforma WEB se versiona a proposito: son
+# las claves publicas del SDK cliente (apiKey, authDomain...), no secretos.
+# Google lo documenta explicitamente: la seguridad real la dan las reglas de
+# Firestore/Storage, no ocultar esta clave. Sin versionarlo, el despliegue en
+# GitHub Actions tendria que reconstruirlo en cada build inyectando secretos,
+# sin ninguna ganancia real de seguridad.
+#
+# Si en el futuro se anade Android/iOS, SI hay que excluir esos ficheros
+# nativos (google-services.json, GoogleService-Info.plist): esos llevan
+# identificadores del paquete atados a la firma de la app.
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+*.iml
+.idea/
+.vscode/

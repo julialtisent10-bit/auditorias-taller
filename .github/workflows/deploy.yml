@@ -1,0 +1,52 @@
+name: Publicar en GitHub Pages
+
+# Se dispara con cada push a main. GitHub Pages sirve exclusivamente
+# contenido estático, así que este flujo solo construye la versión web
+# (flutter build web) — no toca Android ni ninguna otra plataforma.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter test
+
+      # --base-href es imprescindible: GitHub Pages sirve un repo de
+      # proyecto en usuario.github.io/nombre-repo/, no en la raíz. Sin este
+      # ajuste, la app pide sus propios ficheros en /main.dart.js en lugar
+      # de /nombre-repo/main.dart.js y la pantalla se queda en blanco.
+      - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4

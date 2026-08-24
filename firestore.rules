@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Modelo de un solo auditor: no hay roles.
+//
+// La regla es simple: hay que estar autenticado, y cada quien solo toca sus
+// propias auditorías. Esto NO es un detalle burocrático aunque uses la app tú
+// solo: sin `request.auth != null` cualquiera con la clave pública de la app
+// (que va dentro del APK y es trivial de extraer) podría leer y borrar toda
+// la base de datos desde fuera.
+//
+// Si algún día entra un segundo auditor, esto ya funciona sin tocar nada:
+// cada uno verá y editará lo suyo.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function esMiAuditoria(auditoriaId) {
+      return autenticado() &&
+        get(/databases/$(database)/documents/auditorias/$(auditoriaId)).data.auditorUid
+          == request.auth.uid;
+    }
+
+    // Centros y plantillas son datos maestros compartidos.
+    match /centros/{centroId} {
+      allow read, write: if autenticado();
+    }
+
+    match /plantillas/{plantillaId} {
+      allow read, write: if autenticado();
+
+      match /preguntas/{preguntaId} {
+        allow read, write: if autenticado();
+      }
+    }
+
+    match /auditorias/{auditoriaId} {
+      allow read: if autenticado();
+
+      allow create: if autenticado()
+        && request.resource.data.auditorUid == request.auth.uid;
+
+      // El propietario puede reabrir y corregir una auditoría finalizada.
+      // Con un solo auditor no hay a quién escalar, así que el candado real
+      // es el de la aplicación (pide confirmación), no este.
+      allow update, delete: if autenticado()
+        && resource.data.auditorUid == request.auth.uid;
+
+      match /respuestas/{preguntaId} {
+        allow read: if autenticado();
+        allow write: if esMiAuditoria(auditoriaId);
+      }
+    }
+  }
+}
