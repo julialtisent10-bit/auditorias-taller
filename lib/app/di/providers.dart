@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auditoria/presentation/providers/auditoria_controller.dart';
 
 import '../../core/almacen/almacen_binarios.dart';
-import '../../core/sync/outbox_store.dart';
-import '../../core/sync/sync_service.dart';
 import '../../features/auditoria/data/datasources/evidencia_datasource.dart';
 import '../../features/auditoria/data/repositories/auditoria_repository_impl.dart';
 import '../../features/auditoria/domain/entities/auditoria.dart';
@@ -16,13 +14,7 @@ import '../../features/plantillas/data/repositories/plantilla_repository.dart';
 import '../../features/plantillas/domain/entities/plantilla.dart';
 import '../../features/reporte/domain/usecases/generar_reporte.dart';
 
-/// Se sobrescriben en main() con las instancias ya inicializadas.
-final outboxProvider = Provider<OutboxStore>(
-    (ref) => throw UnimplementedError('Sobrescribir en ProviderScope'));
-
-final syncProvider = Provider<SyncService>(
-    (ref) => throw UnimplementedError('Sobrescribir en ProviderScope'));
-
+/// Se sobrescribe en main() con la instancia ya inicializada.
 final almacenProvider = Provider<AlmacenBinarios>(
     (ref) => throw UnimplementedError('Sobrescribir en ProviderScope'));
 
@@ -37,9 +29,7 @@ final plantillaRepositoryProvider =
 final auditoriaRepositoryProvider = Provider<AuditoriaRepository>((ref) {
   return AuditoriaRepositoryImpl(
     evidencias: ref.watch(evidenciaDataSourceProvider),
-    outbox: ref.watch(outboxProvider),
     almacen: ref.watch(almacenProvider),
-    sync: ref.watch(syncProvider),
   );
 });
 

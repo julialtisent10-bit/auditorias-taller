@@ -23,6 +23,10 @@ Future<void> main() async {
   // JavaScript, y esos errores no los atrapa un try/catch normal. Sin esto,
   // un proyecto sin configurar deja la pantalla de carga puesta para siempre
   // y no hay manera de distinguirlo de un cuelgue.
+  // El cuerpo es async a proposito y no se espera: runZonedGuarded devuelve
+  // antes de que termine, y esperar aqui no aportaria nada porque main() ya
+  // no tiene mas trabajo despues.
+  // ignore: unawaited_futures
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -38,9 +42,7 @@ Future<void> main() async {
       runApp(
         ProviderScope(
           overrides: [
-            outboxProvider.overrideWithValue(servicios.outbox),
             almacenProvider.overrideWithValue(servicios.almacen),
-            syncProvider.overrideWithValue(servicios.sync),
           ],
           child: const AuditApp(),
         ),

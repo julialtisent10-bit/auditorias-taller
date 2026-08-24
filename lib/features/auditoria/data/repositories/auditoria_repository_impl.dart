@@ -1,12 +1,9 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/almacen/almacen_binarios.dart';
-import '../../../../core/sync/outbox_store.dart';
-import '../../../../core/sync/sync_service.dart';
 import '../../domain/entities/auditoria.dart';
 import '../../domain/entities/evidencia.dart';
 import '../../domain/entities/respuesta.dart';
@@ -16,15 +13,16 @@ import '../datasources/evidencia_datasource.dart';
 
 /// Implementación offline-first.
 ///
-/// Reparto de responsabilidades, que es lo que hace que esto funcione sin red:
+/// Reparto de responsabilidades:
 ///
 ///  - DOCUMENTOS (respuestas, resultados): se escriben directos a Firestore.
-///    Con `persistenceEnabled` el SDK los guarda en disco y los reenvía solo
-///    al recuperar red, incluso si la app se cerró por el camino. No hace
-///    falta duplicar esa lógica.
-///  - BINARIOS (fotos, PDF, firmas): Firebase Storage NO tiene cola offline.
-///    Van a disco local y se encolan en [OutboxStore] para que [SyncService]
-///    los suba cuando haya cobertura.
+///    Con `persistenceEnabled` el SDK los guarda en IndexedDB y los reenvía
+///    solo al recuperar red, incluso si la pestaña se cerró por el camino.
+///    No hace falta duplicar esa lógica.
+///  - BINARIOS (fotos, firmas, informe): se quedan en [AlmacenBinarios], en
+///    este dispositivo y nada más. El plan gratuito de Firebase no incluye
+///    Cloud Storage, así que no hay adónde subirlos. La copia duradera de la
+///    evidencia es el PDF que el auditor descarga o comparte al cerrar.
 ///
 /// Corolario práctico: un `await` sobre una escritura de Firestore estando
 /// sin red se resuelve igualmente contra la caché local. Nunca hay que
@@ -32,20 +30,14 @@ import '../datasources/evidencia_datasource.dart';
 class AuditoriaRepositoryImpl implements AuditoriaRepository {
   AuditoriaRepositoryImpl({
     required EvidenciaDataSource evidencias,
-    required OutboxStore outbox,
     required AlmacenBinarios almacen,
-    required SyncService sync,
     FirebaseFirestore? firestore,
   })  : _evidencias = evidencias,
-        _outbox = outbox,
         _almacen = almacen,
-        _sync = sync,
         _db = firestore ?? FirebaseFirestore.instance;
 
   final EvidenciaDataSource _evidencias;
-  final OutboxStore _outbox;
   final AlmacenBinarios _almacen;
-  final SyncService _sync;
   final FirebaseFirestore _db;
   static const _uuid = Uuid();
 
@@ -168,31 +160,16 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
     required String preguntaId,
     required bool desdeCamara,
   }) async {
+    // Los bytes ya quedan guardados en el almacén local por el datasource.
+    // No hay nada que encolar: sin Cloud Storage no existe destino remoto.
     final evidencia = await _evidencias.capturar(desdeCamara: desdeCamara);
     // null = el auditor cerró la cámara sin disparar. No es un error.
-    if (evidencia == null) return null;
-
-    await _outbox.encolar(TareaOutbox(
-      // El id de la tarea es el de la evidencia: así SyncService sabe qué
-      // entrada del array actualizar cuando termine la subida.
-      id: evidencia.id,
-      tipo: TipoTarea.evidencia,
-      auditoriaId: auditoriaId,
-      referencia: preguntaId,
-      claveBinario: AlmacenBinarios.claveEvidencia(evidencia.id),
-      remotePath:
-          EvidenciaDataSource.rutaStorage(auditoriaId, preguntaId, evidencia.id),
-    ));
-
-    // Intento oportunista: si hay cobertura sube ya; si no, queda en cola.
-    unawaited(_sync.drenar());
     return evidencia;
   }
 
   @override
   Future<void> eliminarEvidencia(
       String auditoriaId, String preguntaId, Evidencia evidencia) async {
-    await _outbox.completar(evidencia.id); // cancela la subida si sigue en cola
     await _evidencias.eliminar(evidencia);
   }
 
@@ -209,7 +186,7 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
     final ahora = DateTime.now();
 
     // El informe se guarda en local ANTES de tocar Firestore: si el proceso
-    // se corta a partir de aquí, el PDF ya existe y la cola lo subirá.
+    // se corta a partir de aquí, el PDF ya existe y se puede recuperar.
     final clavePdf = AlmacenBinarios.claveInforme(auditoriaId);
     await _almacen.guardar(clavePdf, pdf);
 
@@ -223,28 +200,18 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
       'pdf': {'claveLocal': clavePdf},
       'cerradaEn': ahora.toIso8601String(),
     }, SetOptions(merge: true));
+  }
 
-    await _outbox.encolar(TareaOutbox(
-      id: 'pdf_$auditoriaId',
-      tipo: TipoTarea.informePdf,
-      auditoriaId: auditoriaId,
-      claveBinario: clavePdf,
-      remotePath: 'auditorias/$auditoriaId/informe.pdf',
-    ));
-
-    for (final entrada in {'auditor': firmaAuditor, 'gerente': firmaGerente}.entries) {
-      final clave = entrada.value.claveLocal;
-      if (clave == null) continue;
-      await _outbox.encolar(TareaOutbox(
-        id: 'firma_${entrada.key}_$auditoriaId',
-        tipo: TipoTarea.firma,
-        auditoriaId: auditoriaId,
-        referencia: entrada.key,
-        claveBinario: clave,
-        remotePath: 'auditorias/$auditoriaId/firma_${entrada.key}.png',
-      ));
+  /// Borra del dispositivo las fotos de una auditoría ya cerrada.
+  ///
+  /// Existe porque el almacén local es finito y el navegador puede desalojarlo
+  /// entero si crece demasiado. Una vez descargado el PDF —que lleva las
+  /// imágenes incrustadas— las originales ya no hacen falta para nada.
+  Future<void> liberarEvidencias(List<Respuesta> respuestas) async {
+    for (final r in respuestas) {
+      for (final e in r.evidencias) {
+        await _almacen.borrarEvidencia(e.id);
+      }
     }
-
-    unawaited(_sync.drenar());
   }
 }

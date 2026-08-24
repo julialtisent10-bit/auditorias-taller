@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
-import '../../../../shared/widgets/sync_badge.dart';
+import '../../../../shared/widgets/aviso_almacenamiento.dart';
 import '../../domain/entities/centro.dart';
 
 class HomePage extends ConsumerWidget {
@@ -16,7 +16,7 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Auditorías de taller'),
         actions: [
-          const SyncBadge(),
+          const AvisoAlmacenamiento(),
           IconButton(
             tooltip: 'Ranking',
             icon: const Icon(Icons.leaderboard),

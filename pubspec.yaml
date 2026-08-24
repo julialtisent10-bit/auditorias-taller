@@ -17,15 +17,16 @@ dependencies:
   firebase_core: ^3.6.0
   cloud_firestore: ^5.4.0
   firebase_auth: ^5.3.0
-  firebase_storage: ^12.3.0
 
-  # Almacén local de binarios y cola de subida.
+  # Almacén local de las fotos, las firmas y los informes.
   # Hive en lugar de SQLite: la app se despliega como PWA y en el navegador no
-  # hay SQLite ni sistema de ficheros. Hive usa IndexedDB en web y ficheros en
-  # móvil, con la misma API en ambos.
+  # hay SQLite ni sistema de ficheros. Hive usa IndexedDB en web.
+  #
+  # OJO: con el plan gratuito de Firebase no hay Cloud Storage, así que este
+  # almacén NO es una caché, es el único sitio donde viven las fotos. El PDF
+  # generado al cerrar la auditoría es la copia duradera de la evidencia.
   hive_ce: ^2.10.0
   hive_ce_flutter: ^2.2.0
-  connectivity_plus: ^6.0.5
 
   # Evidencias. El redimensionado va con `image` (Dart puro) y no con
   # flutter_image_compress, que es código nativo y no existe en web.

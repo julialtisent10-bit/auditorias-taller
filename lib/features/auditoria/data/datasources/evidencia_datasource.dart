@@ -58,7 +58,6 @@ class EvidenciaDataSource {
       id: id,
       capturadaEn: DateTime.now(),
       bytes: completa.lengthInBytes,
-      estadoSync: EstadoSync.pendiente,
       miniatura: miniatura,
     );
   }
@@ -92,8 +91,4 @@ class EvidenciaDataSource {
     return img.encodeJpg(destino, quality: calidad);
   }
 
-  /// Ruta destino en Firebase Storage. La usa el trabajador de la cola.
-  static String rutaStorage(
-          String auditoriaId, String preguntaId, String evidenciaId) =>
-      'auditorias/$auditoriaId/$preguntaId/$evidenciaId.jpg';
 }

@@ -5,19 +5,11 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../firebase_options.dart';
 import 'almacen/almacen_binarios.dart';
-import 'sync/outbox_store.dart';
-import 'sync/sync_service.dart';
 
 class Servicios {
-  const Servicios({
-    required this.outbox,
-    required this.almacen,
-    required this.sync,
-  });
+  const Servicios({required this.almacen});
 
-  final OutboxStore outbox;
   final AlmacenBinarios almacen;
-  final SyncService sync;
 }
 
 /// Arranque de la aplicación. Se llama desde main() antes de runApp().
@@ -28,7 +20,8 @@ Future<Servicios> inicializar() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Persistencia de documentos. Es lo que hace que las lecturas y escrituras
-  // de Firestore funcionen contra la caché local sin cobertura.
+  // de Firestore funcionen contra la caché local sin cobertura, y que se
+  // reenvíen solas al recuperar red, incluso tras cerrar la pestaña.
   //
   // En web la caché vive en IndexedDB y solo admite UNA pestaña a la vez: si
   // el auditor abre la app dos veces, la segunda se queda sin persistencia.
@@ -44,10 +37,8 @@ Future<Servicios> inicializar() async {
 
   await Hive.initFlutter();
   final almacen = await AlmacenBinarios.abrir();
-  final outbox = await OutboxStore.abrir();
 
-  final sync = SyncService(outbox: outbox, almacen: almacen);
-  await sync.iniciar();
-
-  return Servicios(outbox: outbox, almacen: almacen, sync: sync);
+  // Sin Cloud Storage (requiere plan de pago) no hay nada que subir: las
+  // fotos se quedan aquí y el PDF es la copia que sale del dispositivo.
+  return Servicios(almacen: almacen);
 }

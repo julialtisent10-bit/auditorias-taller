@@ -311,12 +311,6 @@ class _TiraEvidencias extends StatelessWidget {
                   ),
                 ),
               ),
-              if (e.estadoSync != EstadoSync.sincronizada)
-                const Positioned(
-                  left: 3,
-                  bottom: 3,
-                  child: Icon(Icons.cloud_upload_outlined, size: 14, color: Colors.white),
-                ),
             ],
           );
         },
