@@ -134,6 +134,54 @@ class PlantillaRepository {
 
   // ------------------------------------------------------------------ edicion
 
+  /// Carga TODAS las preguntas, incluidas las retiradas.
+  ///
+  /// `cargar()` filtra por `activa` porque es lo que necesitan las auditorías.
+  /// El editor necesita lo contrario: ver también lo retirado, o quitar una
+  /// pregunta sería irreversible desde la aplicación.
+  Future<List<PreguntaEditable>> cargarParaEditor(String plantillaId) async {
+    final snap = await _db
+        .collection('plantillas')
+        .doc(plantillaId)
+        .collection('preguntas')
+        .get();
+
+    final lista = snap.docs.map((doc) {
+      final datos = {...doc.data(), 'id': doc.id};
+      return PreguntaEditable(
+        pregunta: Pregunta.fromJson(datos),
+        activa: datos['activa'] as bool? ?? true,
+      );
+    }).toList();
+
+    lista.sort((a, b) => a.pregunta.orden.compareTo(b.pregunta.orden));
+    return lista;
+  }
+
+  Future<void> reactivarPregunta(String plantillaId, String preguntaId) async {
+    await _db
+        .collection('plantillas')
+        .doc(plantillaId)
+        .collection('preguntas')
+        .doc(preguntaId)
+        .set({'activa': true}, SetOptions(merge: true));
+    _cache = null;
+  }
+
+  /// Retira varias de una vez. Un solo lote en lugar de N escrituras: es
+  /// atómico y no deja el cuestionario a medio actualizar si falla la red.
+  Future<void> desactivarVarias(
+      String plantillaId, Iterable<String> preguntaIds) async {
+    final lote = _db.batch();
+    final coleccion =
+        _db.collection('plantillas').doc(plantillaId).collection('preguntas');
+    for (final id in preguntaIds) {
+      lote.set(coleccion.doc(id), {'activa': false}, SetOptions(merge: true));
+    }
+    await lote.commit();
+    _cache = null;
+  }
+
   /// true si el cuestionario ya vive en Firestore y por tanto es editable.
   ///
   /// Mientras solo exista el asset empaquetado, cualquier cambio exigiría
@@ -188,6 +236,15 @@ class PlantillaRepository {
   /// Fuerza que la próxima carga vaya a Firestore en vez de servir la copia
   /// en memoria. Se llama tras cualquier edición.
   void invalidarCache() => _cache = null;
+}
+
+/// Una pregunta junto con su estado dentro del cuestionario. Solo la usa el
+/// editor; el resto de la aplicación no necesita saber que existen retiradas.
+class PreguntaEditable {
+  const PreguntaEditable({required this.pregunta, required this.activa});
+
+  final Pregunta pregunta;
+  final bool activa;
 }
 
 class PlantillaInvalida implements Exception {

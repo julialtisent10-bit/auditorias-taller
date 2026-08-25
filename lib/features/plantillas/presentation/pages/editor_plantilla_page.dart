@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/di/providers.dart';
 import '../../../auditoria/domain/entities/pregunta.dart';
 import '../../../auditoria/presentation/pages/cuestionario_page.dart';
+import '../../data/repositories/plantilla_repository.dart';
 import '../../domain/entities/plantilla.dart';
 import 'editor_pregunta_page.dart';
 
@@ -197,45 +198,235 @@ class _PrimeraVez extends StatelessWidget {
   }
 }
 
-class _Listado extends ConsumerWidget {
+class _Listado extends ConsumerStatefulWidget {
   const _Listado({required this.plantilla, required this.onCambio});
 
   final Plantilla plantilla;
   final VoidCallback onCambio;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: areasAuditoria.length,
-      child: Column(
-        children: [
-          TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              for (final a in areasAuditoria)
-                Tab(
-                  icon: Icon(a.icono, size: 18),
-                  child: Text(
-                    '${a.nombre} '
-                    '(${plantilla.preguntas.where((p) => p.areaCodigo == a.codigo).length})',
-                    style: const TextStyle(fontSize: 11),
-                  ),
+  ConsumerState<_Listado> createState() => _ListadoState();
+}
+
+class _ListadoState extends ConsumerState<_Listado> {
+  Future<List<PreguntaEditable>>? _preguntas;
+
+  /// Ids seleccionados. Vacío = modo normal; con algo dentro = modo selección.
+  final Set<String> _seleccion = {};
+  bool _mostrarRetiradas = false;
+  bool _trabajando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _recargar();
+  }
+
+  void _recargar() {
+    setState(() {
+      _seleccion.clear();
+      _preguntas = ref
+          .read(plantillaRepositoryProvider)
+          .cargarParaEditor(widget.plantilla.id);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<PreguntaEditable>>(
+      future: _preguntas,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return _Mensaje(
+            icono: Icons.error_outline,
+            titulo: 'No se pudieron cargar las preguntas',
+            detalle: '${snap.error}',
+          );
+        }
+
+        final todas = snap.data!;
+        final retiradas = todas.where((p) => !p.activa).length;
+
+        return DefaultTabController(
+          length: areasAuditoria.length,
+          child: Column(
+            children: [
+              _BarraHerramientas(
+                seleccionadas: _seleccion.length,
+                retiradas: retiradas,
+                mostrarRetiradas: _mostrarRetiradas,
+                trabajando: _trabajando,
+                onAlternarRetiradas: () =>
+                    setState(() => _mostrarRetiradas = !_mostrarRetiradas),
+                onCancelarSeleccion: () => setState(_seleccion.clear),
+                onRetirarSeleccion: _retirarSeleccionadas,
+              ),
+              TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [
+                  for (final a in areasAuditoria)
+                    Tab(
+                      icon: Icon(a.icono, size: 18),
+                      child: Text(
+                        '${a.nombre} '
+                        '(${todas.where((p) => p.activa && p.pregunta.areaCodigo == a.codigo).length})',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    for (final a in areasAuditoria)
+                      _PreguntasDeArea(
+                        plantillaId: widget.plantilla.id,
+                        area: a,
+                        preguntas: todas
+                            .where((p) => p.pregunta.areaCodigo == a.codigo)
+                            .toList(),
+                        mostrarRetiradas: _mostrarRetiradas,
+                        seleccion: _seleccion,
+                        onAlternarSeleccion: (id) => setState(() {
+                          if (!_seleccion.remove(id)) _seleccion.add(id);
+                        }),
+                        onCambio: () {
+                          _recargar();
+                          widget.onCambio();
+                        },
+                      ),
+                  ],
                 ),
+              ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Future<void> _retirarSeleccionadas() async {
+    final cuantas = _seleccion.length;
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Retirar $cuantas pregunta${cuantas == 1 ? '' : 's'}'),
+        content: const Text(
+          'Dejarán de aparecer en las auditorías nuevas.\n\n'
+          'Podrás recuperarlas desde «Ver retiradas», y las auditorías ya '
+          'hechas las conservan.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Retirar')),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+
+    setState(() => _trabajando = true);
+    try {
+      await ref
+          .read(plantillaRepositoryProvider)
+          .desactivarVarias(widget.plantilla.id, _seleccion.toList());
+      _recargar();
+      widget.onCambio();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('No se pudo retirar: $e')));
+    } finally {
+      if (mounted) setState(() => _trabajando = false);
+    }
+  }
+}
+
+/// Barra superior del editor. Cambia de aspecto según haya o no selección,
+/// para que quede claro que el toque prolongado ha entrado en otro modo.
+class _BarraHerramientas extends StatelessWidget {
+  const _BarraHerramientas({
+    required this.seleccionadas,
+    required this.retiradas,
+    required this.mostrarRetiradas,
+    required this.trabajando,
+    required this.onAlternarRetiradas,
+    required this.onCancelarSeleccion,
+    required this.onRetirarSeleccion,
+  });
+
+  final int seleccionadas;
+  final int retiradas;
+  final bool mostrarRetiradas;
+  final bool trabajando;
+  final VoidCallback onAlternarRetiradas;
+  final VoidCallback onCancelarSeleccion;
+  final VoidCallback onRetirarSeleccion;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+
+    if (seleccionadas > 0) {
+      return Material(
+        color: esquema.secondaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Cancelar selección',
+                onPressed: trabajando ? null : onCancelarSeleccion,
+              ),
+              Expanded(
+                child: Text('$seleccionadas seleccionada'
+                    '${seleccionadas == 1 ? '' : 's'}'),
+              ),
+              TextButton.icon(
+                onPressed: trabajando ? null : onRetirarSeleccion,
+                icon: trabajando
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.remove_circle_outline, size: 18),
+                label: const Text('Retirar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+      child: Row(
+        children: [
           Expanded(
-            child: TabBarView(
-              children: [
-                for (final a in areasAuditoria)
-                  _PreguntasDeArea(
-                    plantilla: plantilla,
-                    area: a,
-                    onCambio: onCambio,
-                  ),
-              ],
+            child: Text(
+              'Mantén pulsada una pregunta para seleccionar varias',
+              style: TextStyle(fontSize: 11, color: esquema.outline),
             ),
           ),
+          if (retiradas > 0)
+            TextButton.icon(
+              onPressed: onAlternarRetiradas,
+              icon: Icon(
+                  mostrarRetiradas ? Icons.visibility_off : Icons.visibility,
+                  size: 16),
+              label: Text(
+                mostrarRetiradas ? 'Ocultar retiradas' : 'Ver retiradas ($retiradas)',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
         ],
       ),
     );
@@ -244,26 +435,31 @@ class _Listado extends ConsumerWidget {
 
 class _PreguntasDeArea extends ConsumerWidget {
   const _PreguntasDeArea({
-    required this.plantilla,
+    required this.plantillaId,
     required this.area,
+    required this.preguntas,
+    required this.mostrarRetiradas,
+    required this.seleccion,
+    required this.onAlternarSeleccion,
     required this.onCambio,
   });
 
-  final Plantilla plantilla;
+  final String plantillaId;
   final AreaTab area;
+  final List<PreguntaEditable> preguntas;
+  final bool mostrarRetiradas;
+  final Set<String> seleccion;
+  final ValueChanged<String> onAlternarSeleccion;
   final VoidCallback onCambio;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preguntas = plantilla.preguntas
-        .where((p) => p.areaCodigo == area.codigo)
-        .toList()
-      ..sort((a, b) => a.orden.compareTo(b.orden));
+    final activas = preguntas.where((p) => p.activa).toList();
+    final retiradas = preguntas.where((p) => !p.activa).toList();
 
-    // Agrupadas por bloque, respetando el orden ya calculado.
-    final bloques = <String, List<Pregunta>>{};
-    for (final p in preguntas) {
-      bloques.putIfAbsent(p.bloque, () => []).add(p);
+    final bloques = <String, List<PreguntaEditable>>{};
+    for (final p in activas) {
+      bloques.putIfAbsent(p.pregunta.bloque, () => []).add(p);
     }
 
     return Scaffold(
@@ -284,41 +480,67 @@ class _PreguntasDeArea extends ConsumerWidget {
             ),
             for (final p in entrada.value)
               _FilaPregunta(
-                pregunta: p,
-                plantillaId: plantilla.id,
+                editable: p,
+                plantillaId: plantillaId,
+                seleccionada: seleccion.contains(p.pregunta.id),
+                modoSeleccion: seleccion.isNotEmpty,
+                onAlternarSeleccion: () => onAlternarSeleccion(p.pregunta.id),
+                onCambio: onCambio,
+              ),
+          ],
+          if (mostrarRetiradas && retiradas.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 28, 4, 6),
+              child: Text(
+                'RETIRADAS DEL CUESTIONARIO',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                      letterSpacing: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            for (final p in retiradas)
+              _FilaPregunta(
+                editable: p,
+                plantillaId: plantillaId,
+                seleccionada: false,
+                modoSeleccion: false,
+                onAlternarSeleccion: () {},
                 onCambio: onCambio,
               ),
           ],
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'add_${area.codigo}',
-        onPressed: () => _nueva(context, ref, preguntas),
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva pregunta'),
-      ),
+      floatingActionButton: seleccion.isNotEmpty
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'add_${area.codigo}',
+              onPressed: () => _nueva(context, activas),
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva pregunta'),
+            ),
     );
   }
 
-  Future<void> _nueva(
-      BuildContext context, WidgetRef ref, List<Pregunta> existentes) async {
+  Future<void> _nueva(BuildContext context, List<PreguntaEditable> activas) async {
     // Se coloca al final del área y hereda el bloque de la última, que es lo
-    // que se quiere el 90 % de las veces al ir añadiendo preguntas seguidas.
-    final siguiente = existentes.isEmpty ? 1 : existentes.last.orden + 1;
+    // que se quiere casi siempre al ir añadiendo preguntas seguidas.
+    final ultima = activas.isEmpty ? null : activas.last.pregunta;
 
-    final plantilla = Pregunta(
+    final nueva = Pregunta(
       id: 'q_${const Uuid().v4().substring(0, 8)}',
       areaCodigo: area.codigo,
-      bloque: existentes.isEmpty ? 'General' : existentes.last.bloque,
-      orden: siguiente,
+      bloque: ultima?.bloque ?? 'General',
+      orden: (ultima?.orden ?? 0) + 1,
       texto: '',
     );
 
     final guardada = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => EditorPreguntaPage(
-          pregunta: plantilla,
-          plantillaId: this.plantilla.id,
+          pregunta: nueva,
+          plantillaId: plantillaId,
           esNueva: true,
         ),
       ),
@@ -329,27 +551,55 @@ class _PreguntasDeArea extends ConsumerWidget {
 
 class _FilaPregunta extends ConsumerWidget {
   const _FilaPregunta({
-    required this.pregunta,
+    required this.editable,
     required this.plantillaId,
+    required this.seleccionada,
+    required this.modoSeleccion,
+    required this.onAlternarSeleccion,
     required this.onCambio,
   });
 
-  final Pregunta pregunta;
+  final PreguntaEditable editable;
   final String plantillaId;
+  final bool seleccionada;
+  final bool modoSeleccion;
+  final VoidCallback onAlternarSeleccion;
   final VoidCallback onCambio;
+
+  Pregunta get pregunta => editable.pregunta;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final esquema = Theme.of(context).colorScheme;
+    final retirada = !editable.activa;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
+      color: seleccionada ? esquema.secondaryContainer : null,
       child: ListTile(
         dense: true,
-        title: Text(pregunta.texto, style: const TextStyle(fontSize: 13)),
+        onTap: modoSeleccion && !retirada ? onAlternarSeleccion : null,
+        onLongPress: retirada ? null : onAlternarSeleccion,
+        leading: modoSeleccion && !retirada
+            ? Icon(seleccionada
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked)
+            : null,
+        title: Text(
+          pregunta.texto,
+          style: TextStyle(
+            fontSize: 13,
+            color: retirada ? esquema.outline : null,
+            decoration: retirada ? TextDecoration.lineThrough : null,
+          ),
+        ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Wrap(
             spacing: 6,
+            runSpacing: 4,
             children: [
+              if (retirada) const _Etiqueta('RETIRADA', alerta: true),
               _Etiqueta('peso ${pregunta.peso}'),
               if (pregunta.critica) const _Etiqueta('CRÍTICA', alerta: true),
               if (pregunta.permiteNA) const _Etiqueta('admite N/A'),
@@ -358,40 +608,56 @@ class _FilaPregunta extends ConsumerWidget {
             ],
           ),
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (opcion) async {
-            if (opcion == 'editar') {
-              final guardada = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => EditorPreguntaPage(
-                    pregunta: pregunta,
-                    plantillaId: plantillaId,
-                  ),
-                ),
-              );
-              if (guardada == true) onCambio();
-            } else if (opcion == 'quitar') {
-              await _confirmarQuitar(context, ref);
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'editar', child: Text('Editar')),
-            PopupMenuItem(value: 'quitar', child: Text('Quitar del cuestionario')),
-          ],
-        ),
+        trailing: modoSeleccion
+            ? null
+            : PopupMenuButton<String>(
+                onSelected: (opcion) async {
+                  switch (opcion) {
+                    case 'editar':
+                      final guardada = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => EditorPreguntaPage(
+                            pregunta: pregunta,
+                            plantillaId: plantillaId,
+                          ),
+                        ),
+                      );
+                      if (guardada == true) onCambio();
+                    case 'quitar':
+                      await _quitar(context, ref);
+                    case 'restaurar':
+                      await ref
+                          .read(plantillaRepositoryProvider)
+                          .reactivarPregunta(plantillaId, pregunta.id);
+                      onCambio();
+                  }
+                },
+                itemBuilder: (_) => retirada
+                    ? const [
+                        PopupMenuItem(
+                            value: 'restaurar',
+                            child: Text('Devolver al cuestionario')),
+                      ]
+                    : const [
+                        PopupMenuItem(value: 'editar', child: Text('Editar')),
+                        PopupMenuItem(
+                            value: 'quitar',
+                            child: Text('Retirar del cuestionario')),
+                      ],
+              ),
       ),
     );
   }
 
-  Future<void> _confirmarQuitar(BuildContext context, WidgetRef ref) async {
+  Future<void> _quitar(BuildContext context, WidgetRef ref) async {
     final confirmado = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Quitar la pregunta'),
+        title: const Text('Retirar la pregunta'),
         content: const Text(
           'Dejará de aparecer en las auditorías nuevas.\n\n'
-          'Las auditorías ya hechas la conservan, porque cada una guarda su '
-          'propia copia de las preguntas.',
+          'Podrás recuperarla desde «Ver retiradas», y las auditorías ya '
+          'hechas la conservan.',
         ),
         actions: [
           TextButton(
@@ -399,7 +665,7 @@ class _FilaPregunta extends ConsumerWidget {
               child: const Text('Cancelar')),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Quitar')),
+              child: const Text('Retirar')),
         ],
       ),
     );
