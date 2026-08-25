@@ -1,3 +1,10 @@
+// ignore_for_file: prefer_const_constructors
+//
+// `pw.TextStyle` no se puede construir como constante en muchos de los usos
+// de este fichero: su inicializador interno impide la evaluación constante, y
+// el analizador rechaza el `const` que el propio linter pide poner. Se
+// silencia la regla aquí en vez de dejar el proyecto con errores.
+
 import 'dart:typed_data';
 
 import 'package:pdf/pdf.dart';
@@ -140,13 +147,13 @@ class PdfBuilder {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Text(d.tituloCuestionario.toUpperCase(),
-                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                      style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
                   pw.SizedBox(height: 4),
                   pw.Text(d.centroNombre,
-                      style: const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 4),
                   pw.Text('Fecha: ${_fecha(d.fecha)}   ·   Auditor: ${d.auditorNombre}',
-                      style: const pw.TextStyle(fontSize: 10)),
+                      style: pw.TextStyle(fontSize: 10)),
                 ],
               ),
             ),
@@ -190,7 +197,7 @@ class PdfBuilder {
       child: pw.Column(
         children: [
           pw.Text('PUNTUACIÓN GLOBAL',
-              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
           pw.SizedBox(height: 6),
           pw.Text('${r.puntuacionGlobal.toStringAsFixed(1)}%',
               style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: color)),
@@ -200,7 +207,7 @@ class PdfBuilder {
             pw.SizedBox(height: 8),
             pw.Text('${r.totalCriticasFalladas} incumplimiento(s) crítico(s)',
                 textAlign: pw.TextAlign.center,
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                     fontSize: 8, color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
           ],
         ],
@@ -213,8 +220,8 @@ class PdfBuilder {
   pw.Widget _tablaAreas(DatosReporte d) {
     return pw.TableHelper.fromTextArray(
       headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-      headerStyle: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
-      cellStyle: const pw.TextStyle(fontSize: 9),
+      headerStyle: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+      cellStyle: pw.TextStyle(fontSize: 9),
       cellAlignments: {
         0: pw.Alignment.centerLeft,
         1: pw.Alignment.centerLeft,
@@ -286,7 +293,7 @@ class PdfBuilder {
         _tituloSeccion('Plan de acciones correctivas'),
         if (hallazgos.isEmpty)
           pw.Text('No se ha detectado ningún incumplimiento.',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700))
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700))
         else
           pw.Table(
             columnWidths: const {
@@ -300,7 +307,7 @@ class PdfBuilder {
                     pw.Padding(
                       padding: const pw.EdgeInsets.symmetric(vertical: 4),
                       child: pw.Text('${i + 1}.',
-                          style: const pw.TextStyle(
+                          style: pw.TextStyle(
                               fontSize: 9, fontWeight: pw.FontWeight.bold)),
                     ),
                     pw.Padding(
@@ -309,10 +316,10 @@ class PdfBuilder {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text(listadas[i].textoPregunta,
-                              style: const pw.TextStyle(fontSize: 9)),
+                              style: pw.TextStyle(fontSize: 9)),
                           pw.Text(
                             _detalleHallazgo(listadas[i], nombreArea),
-                            style: const pw.TextStyle(
+                            style: pw.TextStyle(
                                 fontSize: 8,
                                 fontStyle: pw.FontStyle.italic,
                                 color: PdfColors.grey700),
@@ -330,7 +337,7 @@ class PdfBuilder {
             child: pw.Text(
               'Y ${hallazgos.length - tope} incumplimientos más, detallados por '
               'áreas en las páginas siguientes.',
-              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
             ),
           ),
       ],
@@ -373,20 +380,20 @@ class PdfBuilder {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('FORTALEZAS DETECTADAS',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 9,
                   fontWeight: pw.FontWeight.bold,
                   color: PdfColors.green700)),
           pw.SizedBox(height: 4),
           if (escritas.isNotEmpty)
-            pw.Text(escritas, style: const pw.TextStyle(fontSize: 9))
+            pw.Text(escritas, style: pw.TextStyle(fontSize: 9))
           else if (deducidas.isEmpty)
             pw.Text('Ningún área alcanza el 85 %.',
                 style:
-                    const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700))
+                    pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700))
           else
             for (final f in deducidas)
-              pw.Bullet(text: f, style: const pw.TextStyle(fontSize: 8.5)),
+              pw.Bullet(text: f, style: pw.TextStyle(fontSize: 8.5)),
         ],
       ),
     );
@@ -401,7 +408,7 @@ class PdfBuilder {
       _tituloSeccion('Desglose de incumplimientos por área'),
       pw.Text(
         'Solo se listan las preguntas valoradas como "No cumple" o "Cumple parcialmente".',
-        style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
       ),
     ];
 
@@ -419,7 +426,7 @@ class PdfBuilder {
           color: PdfColor(area.color.red, area.color.green, area.color.blue, 0.15),
           child: pw.Text(
             '${area.nombre}  ·  ${hallazgos.length} hallazgo(s)',
-            style: const pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
           ),
         ),
       );
@@ -428,7 +435,7 @@ class PdfBuilder {
         widgets.add(pw.Padding(
           padding: const pw.EdgeInsets.only(top: 4, left: 8),
           child: pw.Text('Sin incumplimientos en esta área.',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
         ));
         continue;
       }
@@ -475,23 +482,23 @@ class PdfBuilder {
                   padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   color: PdfColors.red800,
                   child: pw.Text('CRÍTICA',
-                      style: const pw.TextStyle(
+                      style: pw.TextStyle(
                           fontSize: 7,
                           fontWeight: pw.FontWeight.bold,
                           color: PdfColors.white)),
                 ),
               pw.Expanded(
-                child: pw.Text(r.textoPregunta, style: const pw.TextStyle(fontSize: 9.5)),
+                child: pw.Text(r.textoPregunta, style: pw.TextStyle(fontSize: 9.5)),
               ),
               pw.Text('peso ${r.peso}',
-                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
             ],
           ),
           if (r.comentario.trim().isNotEmpty)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 5, left: 2),
               child: pw.Text('Observación: ${r.comentario}',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 8.5,
                       fontStyle: pw.FontStyle.italic,
                       color: PdfColors.grey800)),
@@ -530,10 +537,10 @@ class PdfBuilder {
             children: [
               pw.Container(height: 60),
               pw.Divider(thickness: 0.8),
-              pw.Text(rol, style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-              pw.Text(nombre, style: const pw.TextStyle(fontSize: 9)),
+              pw.Text(rol, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+              pw.Text(nombre, style: pw.TextStyle(fontSize: 9)),
               pw.Text('Fecha: ${_fecha(d.fecha)}',
-                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
             ],
           ),
         );
@@ -556,7 +563,7 @@ class PdfBuilder {
   pw.Widget _tituloSeccion(String texto) => pw.Padding(
         padding: const pw.EdgeInsets.only(bottom: 6),
         child: pw.Text(texto.toUpperCase(),
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
                 fontSize: 11, fontWeight: pw.FontWeight.bold, letterSpacing: 0.6)),
       );
 
@@ -565,7 +572,7 @@ class PdfBuilder {
         margin: const pw.EdgeInsets.only(top: 8),
         child: pw.Text(
           '${d.centroNombre} · ${_fecha(d.fecha)} · Página ${ctx.pageNumber}/${ctx.pagesCount}',
-          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
         ),
       );
 

@@ -1,3 +1,10 @@
+// ignore_for_file: prefer_const_constructors
+//
+// `pw.TextStyle` no se puede construir como constante en muchos de los usos
+// de este fichero: su inicializador interno impide la evaluación constante, y
+// el analizador rechaza el `const` que el propio linter pide poner. Se
+// silencia la regla aquí en vez de dejar el proyecto con errores.
+
 import 'dart:math' as math;
 
 import 'package:pdf/pdf.dart';
@@ -64,9 +71,9 @@ class RadarChart extends pw.StatelessWidget {
             mainAxisSize: pw.MainAxisSize.min,
             children: [
               pw.Text(ejes[i],
-                  style: const pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                  style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
               pw.Text('${valores[i].toStringAsFixed(1)}%',
-                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
             ],
           ),
         ),

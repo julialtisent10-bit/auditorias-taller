@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/di/providers.dart';
 import '../../../../shared/widgets/aviso_almacenamiento.dart';
 import '../../domain/entities/centro.dart';
+import 'ficha_centro_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -149,6 +150,9 @@ class _TarjetaCentro extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => FichaCentroPage(centro: centro),
+        )),
         title: Text(centro.nombre, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           puntuacion == null

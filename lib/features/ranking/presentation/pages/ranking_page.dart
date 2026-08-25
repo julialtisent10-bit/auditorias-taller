@@ -14,8 +14,16 @@ class RankingPage extends ConsumerWidget {
     final historico = ref.watch(historicoProvider);
     final ranking = ref.watch(rankingProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ranking de centros')),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+      appBar: AppBar(
+        title: const Text('Ranking de centros'),
+        bottom: const TabBar(tabs: [
+          Tab(text: 'Clasificación'),
+          Tab(text: 'Por áreas'),
+        ]),
+      ),
       body: historico.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('No se pudo cargar el histórico:\n$e')),
@@ -38,14 +46,139 @@ class RankingPage extends ConsumerWidget {
           final areas = ref.watch(plantillaProvider(null)).value?.areas ?? const [];
           final vista = AreaVista.listaDesde(areas);
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: ranking.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) =>
-                _Tarjeta(posicion: i + 1, auditoria: ranking[i], areas: vista),
+          return TabBarView(
+            children: [
+              ListView.separated(
+                padding: const EdgeInsets.all(12),
+                itemCount: ranking.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, i) =>
+                    _Tarjeta(posicion: i + 1, auditoria: ranking[i], areas: vista),
+              ),
+              _Comparativa(ranking: ranking, areas: vista),
+            ],
           );
         },
+      ),
+      ),
+    );
+  }
+}
+
+/// Matriz de áreas contra centros.
+///
+/// La clasificación dice quién va delante, pero no en qué. Aquí se ve de un
+/// vistazo si un área flojea en todos los centros —problema de proceso, no de
+/// centro— o si es uno solo el que arrastra el resultado.
+class _Comparativa extends StatelessWidget {
+  const _Comparativa({required this.ranking, required this.areas});
+
+  final List<Auditoria> ranking;
+  final List<AreaVista> areas;
+
+  @override
+  Widget build(BuildContext context) {
+    if (areas.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text('Cargando el cuestionario…',
+              style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
+
+    final esquema = Theme.of(context).colorScheme;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(12),
+      child: SingleChildScrollView(
+        // Con siete áreas y varios centros la tabla no cabe de ancho: se
+        // desplaza ella en lugar de encoger el texto hasta lo ilegible.
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: 18,
+          headingRowHeight: 44,
+          dataRowMinHeight: 40,
+          dataRowMaxHeight: 44,
+          columns: [
+            const DataColumn(label: Text('Área', style: TextStyle(fontSize: 12))),
+            for (final a in ranking)
+              DataColumn(
+                label: SizedBox(
+                  width: 74,
+                  child: Text(a.centroNombre,
+                      style: const TextStyle(fontSize: 11),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                ),
+              ),
+          ],
+          rows: [
+            for (final area in areas)
+              DataRow(cells: [
+                DataCell(Row(children: [
+                  Icon(area.icono, size: 15, color: area.color),
+                  const SizedBox(width: 6),
+                  SizedBox(
+                    width: 110,
+                    child: Text(area.nombreCorto,
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ])),
+                for (final a in ranking)
+                  DataCell(_Celda(valor: a.porcentajeArea(area.codigo))),
+              ]),
+            // Fila de totales, para poder comparar el área con la nota global.
+            DataRow(
+              color: WidgetStatePropertyAll(
+                  esquema.surfaceContainerHighest.withValues(alpha: 0.5)),
+              cells: [
+                const DataCell(Text('GLOBAL',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                for (final a in ranking)
+                  DataCell(_Celda(valor: a.puntuacionGlobal, destacada: true)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Celda extends StatelessWidget {
+  const _Celda({required this.valor, this.destacada = false});
+
+  final double valor;
+  final bool destacada;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = valor >= 90
+        ? Colors.green.shade700
+        : valor >= 80
+            ? Colors.lightGreen.shade800
+            : valor >= 65
+                ? Colors.orange.shade800
+                : Colors.red.shade700;
+
+    return Container(
+      width: 56,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '${valor.round()}',
+        style: TextStyle(
+          fontSize: 13,
+          color: color,
+          fontWeight: destacada ? FontWeight.bold : FontWeight.w500,
+        ),
       ),
     );
   }

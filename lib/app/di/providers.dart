@@ -87,6 +87,11 @@ final todasLasAuditoriasProvider = StreamProvider<List<Auditoria>>((ref) {
   });
 });
 
+/// Auditorías cerradas de un centro, de la más reciente a la más antigua.
+final historicoDeCentroProvider =
+    StreamProvider.family<List<Auditoria>, String>((ref, centroId) =>
+        ref.watch(auditoriaRepositoryProvider).historico(centroId: centroId));
+
 /// Auditorías abiertas del usuario actual, para poder retomarlas.
 final enCursoProvider = StreamProvider<List<Auditoria>>((ref) => ref
     .watch(auditoriaRepositoryProvider)

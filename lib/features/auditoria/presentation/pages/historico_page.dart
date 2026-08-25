@@ -4,6 +4,8 @@ import 'package:printing/printing.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../../core/almacen/almacen_binarios.dart';
+import '../../../../core/descarga_web.dart';
+import '../../../reporte/data/exportador_excel.dart';
 import '../../../centros/data/repositories/centro_repository.dart';
 import '../../domain/entities/auditoria.dart';
 import '../../domain/repositories/auditoria_repository.dart';
@@ -21,7 +23,16 @@ class HistoricoPage extends ConsumerWidget {
     final auditorias = ref.watch(todasLasAuditoriasProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Auditorías')),
+      appBar: AppBar(
+        title: const Text('Auditorías'),
+        actions: [
+          IconButton(
+            tooltip: 'Exportar histórico a Excel',
+            icon: const Icon(Icons.table_view_outlined),
+            onPressed: () => _exportarHistorico(context, ref),
+          ),
+        ],
+      ),
       body: auditorias.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -50,6 +61,31 @@ class HistoricoPage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  /// Una fila por auditoría cerrada, con su desglose por áreas, para cruzarlo
+  /// con los informes de postventa que ya se llevan en hoja de cálculo.
+  Future<void> _exportarHistorico(BuildContext context, WidgetRef ref) async {
+    final mensajero = ScaffoldMessenger.of(context);
+    final cerradas = (ref.read(todasLasAuditoriasProvider).value ?? const [])
+        .where((a) => a.estado == EstadoAuditoria.finalizada)
+        .toList();
+
+    if (cerradas.isEmpty) {
+      mensajero.showSnackBar(const SnackBar(
+          content: Text('No hay ninguna auditoría cerrada que exportar.')));
+      return;
+    }
+
+    try {
+      final plantilla = await ref.read(plantillaRepositoryProvider).cargar();
+      final bytes = const ExportadorExcel()
+          .historico(auditorias: cerradas, areas: plantilla.areas);
+      descargarBytes(bytes, 'Historico_auditorias.xlsx',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    } catch (e) {
+      mensajero.showSnackBar(SnackBar(content: Text('No se pudo exportar: $e')));
+    }
   }
 }
 
@@ -88,14 +124,17 @@ class _Fila extends ConsumerWidget {
               final navegador = Navigator.of(context);
               await reanudarAuditoria(ref, auditoria);
               navegador.pushNamed('/auditoria');
+            } else if (opcion == 'excel') {
+              await _exportar(context, ref);
             } else if (opcion == 'borrar') {
               await _borrar(context, ref);
             }
           },
           itemBuilder: (_) => [
-            if (cerrada)
-              const PopupMenuItem(value: 'informe', child: Text('Ver informe'))
-            else
+            if (cerrada) ...[
+              const PopupMenuItem(value: 'informe', child: Text('Ver informe')),
+              const PopupMenuItem(value: 'excel', child: Text('Exportar a Excel')),
+            ] else
               const PopupMenuItem(
                   value: 'continuar', child: Text('Continuar auditoría')),
             const PopupMenuItem(value: 'borrar', child: Text('Borrar')),
@@ -130,6 +169,30 @@ class _Fila extends ConsumerWidget {
       filename: 'Auditoria_${auditoria.centroNombre}_${_fecha(auditoria.fecha)}.pdf'
           .replaceAll('/', '-'),
     );
+  }
+
+  Future<void> _exportar(BuildContext context, WidgetRef ref) async {
+    final mensajero = ScaffoldMessenger.of(context);
+    try {
+      final respuestas =
+          await ref.read(auditoriaRepositoryProvider).respuestasDe(auditoria.id);
+      final plantilla = await ref
+          .read(plantillaRepositoryProvider)
+          .cargar(plantillaId: auditoria.plantillaId);
+
+      final bytes = const ExportadorExcel().auditoria(
+        auditoria: auditoria,
+        respuestas: respuestas,
+        areas: plantilla.areas,
+      );
+      descargarBytes(
+        bytes,
+        ExportadorExcel.nombreFichero(auditoria.centroNombre, auditoria.fecha),
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    } catch (e) {
+      mensajero.showSnackBar(SnackBar(content: Text('No se pudo exportar: $e')));
+    }
   }
 
   Future<void> _borrar(BuildContext context, WidgetRef ref) async {
