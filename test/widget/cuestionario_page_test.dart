@@ -44,6 +44,7 @@ class RepoFalso implements AuditoriaRepository {
     required String centroNombre,
     required String plantillaId,
     required int plantillaVersion,
+    required String plantillaNombre,
     required DateTime fecha,
     required String auditorUid,
     required String auditorNombre,

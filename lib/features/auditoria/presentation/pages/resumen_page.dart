@@ -18,11 +18,25 @@ import '../providers/auditoria_controller.dart';
 
 /// Resultado antes de firmar: qué nota sale, dónde están los problemas y
 /// vista previa del informe.
-class ResumenPage extends ConsumerWidget {
+class ResumenPage extends ConsumerStatefulWidget {
   const ResumenPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResumenPage> createState() => _ResumenPageState();
+}
+
+class _ResumenPageState extends ConsumerState<ResumenPage> {
+  late final TextEditingController _fortalezas = TextEditingController(
+      text: ref.read(auditoriaActualProvider)?.fortalezas ?? '');
+
+  @override
+  void dispose() {
+    _fortalezas.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(auditoriaControllerProvider);
     final res = state.resultado;
     final hallazgos = state.respuestas.values
@@ -67,6 +81,33 @@ class ResumenPage extends ConsumerWidget {
               ),
             ),
           for (final h in hallazgos) _FilaHallazgo(respuesta: h),
+          const SizedBox(height: 28),
+          Text('Fortalezas detectadas',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          const Text(
+            'Lo que merece la pena destacar y replicar en los demás centros. '
+            'Sale en el informe con tus palabras.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _fortalezas,
+            minLines: 3,
+            maxLines: 6,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              hintText: 'Opcional. Si lo dejas vacío, el informe destaca las '
+                  'áreas por encima del 85 %.',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (t) {
+              final actual = ref.read(auditoriaActualProvider);
+              if (actual == null) return;
+              ref.read(auditoriaActualProvider.notifier).state =
+                  actual.copyWith(fortalezas: t);
+            },
+          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -76,7 +117,7 @@ class ResumenPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => _previsualizar(context, ref),
+                  onPressed: _previsualizar,
                   icon: const Icon(Icons.visibility),
                   label: const Text('Ver informe'),
                 ),
@@ -96,7 +137,7 @@ class ResumenPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _previsualizar(BuildContext context, WidgetRef ref) async {
+  Future<void> _previsualizar() async {
     final datos = await construirDatosReporte(ref);
     if (datos == null) return;
     await ref.read(generarReporteProvider).previsualizar(datos);
@@ -143,6 +184,10 @@ Future<DatosReporte?> construirDatosReporte(WidgetRef ref) async {
   }
 
   return DatosReporte(
+    tituloCuestionario: auditoria.plantillaNombre.isEmpty
+        ? 'Auditoría operativa de taller'
+        : auditoria.plantillaNombre,
+    fortalezas: auditoria.fortalezas,
     centroNombre: state.centroNombre,
     fecha: state.fecha,
     auditorNombre: auditoria.auditorNombre,

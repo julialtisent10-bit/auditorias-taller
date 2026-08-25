@@ -48,6 +48,7 @@ class Auditoria {
     required this.centroNombre,
     required this.plantillaId,
     required this.plantillaVersion,
+    this.plantillaNombre = '',
     required this.fecha,
     required this.auditorUid,
     required this.auditorNombre,
@@ -56,6 +57,7 @@ class Auditoria {
     this.resultados,
     this.firmaAuditor,
     this.firmaGerente,
+    this.fortalezas = '',
     this.pdfUrl,
     this.pdfClaveLocal,
     this.creadaEn,
@@ -67,6 +69,11 @@ class Auditoria {
   final String centroNombre;
   final String plantillaId;
   final int plantillaVersion;
+
+  /// Nombre del cuestionario tal y como se llamaba ese día. Igual que con el
+  /// texto de las preguntas, se guarda copiado: si mañana se renombra, el
+  /// informe antiguo debe seguir diciendo lo que decía.
+  final String plantillaNombre;
   final DateTime fecha;
   final String auditorUid;
   final String auditorNombre;
@@ -78,6 +85,13 @@ class Auditoria {
 
   /// Snapshot del cálculo en el momento del cierre (ResultadoAuditoria.toJson).
   final Map<String, dynamic>? resultados;
+
+  /// Lo que el auditor destaca en positivo, con sus palabras.
+  ///
+  /// El Excel del que sale este cuestionario reserva un apartado para esto y
+  /// no se puede deducir de las respuestas: una auditoría con todo en verde
+  /// no dice qué merece la pena replicar en los demás centros.
+  final String fortalezas;
 
   final Firma? firmaAuditor;
   final Firma? firmaGerente;
@@ -102,6 +116,7 @@ class Auditoria {
     EstadoAuditoria? estado,
     Map<String, String>? responsables,
     Map<String, dynamic>? resultados,
+    String? fortalezas,
     Firma? firmaAuditor,
     Firma? firmaGerente,
     String? pdfUrl,
@@ -114,12 +129,14 @@ class Auditoria {
         centroNombre: centroNombre,
         plantillaId: plantillaId,
         plantillaVersion: plantillaVersion,
+        plantillaNombre: plantillaNombre,
         fecha: fecha,
         auditorUid: auditorUid,
         auditorNombre: auditorNombre,
         estado: estado ?? this.estado,
         responsables: responsables ?? this.responsables,
         resultados: resultados ?? this.resultados,
+        fortalezas: fortalezas ?? this.fortalezas,
         firmaAuditor: firmaAuditor ?? this.firmaAuditor,
         firmaGerente: firmaGerente ?? this.firmaGerente,
         pdfUrl: pdfUrl ?? this.pdfUrl,
@@ -134,12 +151,14 @@ class Auditoria {
         'centroNombre': centroNombre,
         'plantillaId': plantillaId,
         'plantillaVersion': plantillaVersion,
+        'plantillaNombre': plantillaNombre,
         'fecha': fecha.toIso8601String(),
         'auditorUid': auditorUid,
         'auditorNombre': auditorNombre,
         'estado': estado.codigo,
         'responsables': responsables,
         'resultados': resultados,
+        'fortalezas': fortalezas,
         'firmas': {
           'auditor': firmaAuditor?.toJson(),
           'gerente': firmaGerente?.toJson(),
@@ -158,6 +177,7 @@ class Auditoria {
       centroNombre: j['centroNombre'] as String? ?? '',
       plantillaId: j['plantillaId'] as String? ?? '',
       plantillaVersion: (j['plantillaVersion'] as num?)?.toInt() ?? 1,
+      plantillaNombre: j['plantillaNombre'] as String? ?? '',
       fecha: DateTime.parse(j['fecha'] as String),
       auditorUid: j['auditorUid'] as String? ?? '',
       auditorNombre: j['auditorNombre'] as String? ?? '',
@@ -165,6 +185,7 @@ class Auditoria {
       responsables:
           Map<String, String>.from((j['responsables'] as Map?)?.cast<String, String>() ?? {}),
       resultados: (j['resultados'] as Map?)?.cast<String, dynamic>(),
+      fortalezas: j['fortalezas'] as String? ?? '',
       firmaAuditor: firmas?['auditor'] == null
           ? null
           : Firma.fromJson((firmas!['auditor'] as Map).cast<String, dynamic>()),

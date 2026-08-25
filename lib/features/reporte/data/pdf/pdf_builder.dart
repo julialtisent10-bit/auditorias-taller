@@ -46,6 +46,8 @@ class DatosReporte {
     required this.resultado,
     required this.respuestas,
     required this.areas,
+    this.tituloCuestionario = 'Auditoría operativa de taller',
+    this.fortalezas = '',
     this.imagenes = const {},
     this.logoSvg,
     this.fuentes,
@@ -62,6 +64,15 @@ class DatosReporte {
   /// auditoría, no de una lista fija: el informe debe reflejar el
   /// cuestionario que se pasó ese día.
   final List<AreaInfo> areas;
+
+  /// Nombre del cuestionario, tal cual lo trae la plantilla. Antes iba fijo
+  /// en el encabezado y desmentía al propio informe si el cuestionario era
+  /// otro.
+  final String tituloCuestionario;
+
+  /// Fortalezas escritas por el auditor. Si va vacío, el informe deduce las
+  /// áreas mejor puntuadas.
+  final String fortalezas;
 
   /// Bytes de las evidencias, indexados por id. Los aporta quien construye
   /// el informe leyéndolos del almacén local; el generador no sabe de dónde
@@ -128,7 +139,7 @@ class PdfBuilder {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('AUDITORÍA OPERATIVA DE TALLER',
+                  pw.Text(d.tituloCuestionario.toUpperCase(),
                       style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
                   pw.SizedBox(height: 4),
                   pw.Text(d.centroNombre,
@@ -234,72 +245,153 @@ class PdfBuilder {
   // ------------------------------------------------------ resumen ejecutivo
 
   pw.Widget _resumenEjecutivo(DatosReporte d) {
-    final areasOrdenadas = d.areas
-        .where((a) => d.resultado.areas[a.codigo]?.evaluable ?? false)
-        .toList()
-      ..sort((x, y) => (d.resultado.areas[y.codigo]!.porcentaje)
-          .compareTo(d.resultado.areas[x.codigo]!.porcentaje));
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _planDeAcciones(d),
+        pw.SizedBox(height: 14),
+        _fortalezas(d),
+      ],
+    );
+  }
 
-    final fortalezas = areasOrdenadas.where((a) => d.resultado.areas[a.codigo]!.porcentaje >= 85);
-    final mejoras = areasOrdenadas.reversed
-        .where((a) => d.resultado.areas[a.codigo]!.porcentaje < 85);
+  /// Plan de acciones correctivas, numerado como en la hoja de cálculo de la
+  /// que sale este cuestionario.
+  ///
+  /// Se ordena por gravedad —primero lo crítico, luego lo que no cumple, y
+  /// después lo parcial— de modo que lo primero de la lista es lo primero que
+  /// hay que atacar.
+  pw.Widget _planDeAcciones(DatosReporte d) {
+    final nombreArea = {for (final a in d.areas) a.codigo: a.nombre};
 
-    // Los 5 hallazgos de mayor impacto: primero críticos, luego por peso.
-    final criticos = d.respuestas.where((r) => r.valor?.esHallazgo ?? false).toList()
-      ..sort((x, y) {
-        final porCritica = (y.critica ? 1 : 0).compareTo(x.critica ? 1 : 0);
-        if (porCritica != 0) return porCritica;
-        final porValor = (x.valor == ValorRespuesta.noCumple ? 0 : 1)
-            .compareTo(y.valor == ValorRespuesta.noCumple ? 0 : 1);
-        if (porValor != 0) return porValor;
-        return y.peso.compareTo(x.peso);
-      });
+    final hallazgos =
+        d.respuestas.where((r) => r.valor?.esHallazgo ?? false).toList()
+          ..sort((x, y) {
+            final porCritica = (y.critica ? 1 : 0).compareTo(x.critica ? 1 : 0);
+            if (porCritica != 0) return porCritica;
+            final porValor = (x.valor == ValorRespuesta.noCumple ? 0 : 1)
+                .compareTo(y.valor == ValorRespuesta.noCumple ? 0 : 1);
+            if (porValor != 0) return porValor;
+            return y.peso.compareTo(x.peso);
+          });
+
+    // Un plan de acciones con cuarenta puntos no es un plan. Lo que no cabe
+    // aquí sigue detallado, área por área, en el desglose posterior.
+    const tope = 12;
+    final listadas = hallazgos.take(tope).toList();
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _tituloSeccion('Resumen ejecutivo'),
-        pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Expanded(
-              child: _bloqueLista(
-                'Fortalezas',
-                PdfColors.green700,
-                fortalezas
-                    .map((a) =>
-                        '${a.nombre}: ${d.resultado.areas[a.codigo]!.porcentaje.toStringAsFixed(1)}%')
-                    .toList(),
-                vacio: 'Ningún área alcanza el 85 %.',
-              ),
+        _tituloSeccion('Plan de acciones correctivas'),
+        if (hallazgos.isEmpty)
+          pw.Text('No se ha detectado ningún incumplimiento.',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700))
+        else
+          pw.Table(
+            columnWidths: const {
+              0: pw.FixedColumnWidth(20),
+              1: pw.FlexColumnWidth(),
+            },
+            children: [
+              for (var i = 0; i < listadas.length; i++)
+                pw.TableRow(
+                  children: [
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                      child: pw.Text('${i + 1}.',
+                          style: const pw.TextStyle(
+                              fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(listadas[i].textoPregunta,
+                              style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(
+                            _detalleHallazgo(listadas[i], nombreArea),
+                            style: const pw.TextStyle(
+                                fontSize: 8,
+                                fontStyle: pw.FontStyle.italic,
+                                color: PdfColors.grey700),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        if (hallazgos.length > tope)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 6),
+            child: pw.Text(
+              'Y ${hallazgos.length - tope} incumplimientos más, detallados por '
+              'áreas en las páginas siguientes.',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
             ),
-            pw.SizedBox(width: 12),
-            pw.Expanded(
-              child: _bloqueLista(
-                'Áreas de mejora',
-                PdfColors.red700,
-                mejoras
-                    .map((a) =>
-                        '${a.nombre}: ${d.resultado.areas[a.codigo]!.porcentaje.toStringAsFixed(1)}%')
-                    .toList(),
-                vacio: 'Todas las áreas por encima del 85 %.',
-              ),
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 10),
-        _bloqueLista(
-          'Prioridades de acción',
-          PdfColors.blueGrey800,
-          criticos.take(5).map((r) {
-            final marca = r.critica ? '[CRÍTICA] ' : '';
-            return '$marca${r.textoPregunta} (${r.valor!.etiqueta})';
-          }).toList(),
-          vacio: 'Sin incumplimientos registrados.',
-        ),
+          ),
       ],
     );
   }
+
+  static String _detalleHallazgo(Respuesta r, Map<String, String> nombreArea) {
+    final partes = <String>[
+      nombreArea[r.areaCodigo] ?? '',
+      r.valor!.etiqueta,
+      if (r.comentario.trim().isNotEmpty) r.comentario.trim(),
+    ];
+    return partes.where((p) => p.isNotEmpty).join('  ·  ');
+  }
+
+  /// Fortalezas detectadas, con las palabras del auditor.
+  ///
+  /// Si no escribió ninguna se listan las áreas mejor puntuadas: es una
+  /// aproximación pobre, pero deja el apartado con algo útil en vez de vacío.
+  pw.Widget _fortalezas(DatosReporte d) {
+    final escritas = d.fortalezas.trim();
+
+    final deducidas = d.areas
+        .where((a) =>
+            (d.resultado.areas[a.codigo]?.evaluable ?? false) &&
+            d.resultado.areas[a.codigo]!.porcentaje >= 85)
+        .map((a) =>
+            '${a.nombre}: ${d.resultado.areas[a.codigo]!.porcentaje.toStringAsFixed(1)} %')
+        .toList();
+
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(9),
+      decoration: const pw.BoxDecoration(
+        border:
+            pw.Border(left: pw.BorderSide(color: PdfColors.green700, width: 3)),
+        color: PdfColors.grey100,
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('FORTALEZAS DETECTADAS',
+              style: const pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.green700)),
+          pw.SizedBox(height: 4),
+          if (escritas.isNotEmpty)
+            pw.Text(escritas, style: const pw.TextStyle(fontSize: 9))
+          else if (deducidas.isEmpty)
+            pw.Text('Ningún área alcanza el 85 %.',
+                style:
+                    const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700))
+          else
+            for (final f in deducidas)
+              pw.Bullet(text: f, style: const pw.TextStyle(fontSize: 8.5)),
+        ],
+      ),
+    );
+  }
+
 
   // ------------------------------------------------------------- hallazgos
 
@@ -467,30 +559,6 @@ class PdfBuilder {
             style: const pw.TextStyle(
                 fontSize: 11, fontWeight: pw.FontWeight.bold, letterSpacing: 0.6)),
       );
-
-  pw.Widget _bloqueLista(String titulo, PdfColor color, List<String> items,
-      {required String vacio}) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(8),
-      decoration: pw.BoxDecoration(
-        border: pw.Border(left: pw.BorderSide(color: color, width: 3)),
-        color: PdfColors.grey100,
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(titulo,
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: color)),
-          pw.SizedBox(height: 4),
-          if (items.isEmpty)
-            pw.Text(vacio, style: const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700))
-          else
-            for (final i in items)
-              pw.Bullet(text: i, style: const pw.TextStyle(fontSize: 8.5)),
-        ],
-      ),
-    );
-  }
 
   pw.Widget _pie(pw.Context ctx, DatosReporte d) => pw.Container(
         alignment: pw.Alignment.centerRight,

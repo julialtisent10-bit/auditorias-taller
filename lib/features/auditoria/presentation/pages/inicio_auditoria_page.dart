@@ -249,6 +249,7 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
             centroNombre: centro.nombre,
             plantillaId: plantilla.id,
             plantillaVersion: plantilla.version,
+            plantillaNombre: plantilla.nombre,
             fecha: _fecha,
             auditorUid: ref.read(auditorUidProvider),
             auditorNombre: ref.read(auditorNombreProvider),
