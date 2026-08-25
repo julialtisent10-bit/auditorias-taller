@@ -25,13 +25,23 @@ class HomePage extends ConsumerWidget {
           ),
           PopupMenuButton<String>(
             onSelected: (opcion) {
-              if (opcion == 'cuestionario') {
+              if (opcion == 'historico') {
+                Navigator.of(context).pushNamed('/historico');
+              } else if (opcion == 'cuestionario') {
                 Navigator.of(context).pushNamed('/cuestionario/editar');
               } else if (opcion == 'salir') {
                 FirebaseAuth.instance.signOut();
               }
             },
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'historico',
+                child: ListTile(
+                  leading: Icon(Icons.history),
+                  title: Text('Auditorías'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
               PopupMenuItem(
                 value: 'cuestionario',
                 child: ListTile(

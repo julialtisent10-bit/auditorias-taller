@@ -173,6 +173,39 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
     await _evidencias.eliminar(evidencia);
   }
 
+  @override
+  Future<void> eliminar(String auditoriaId) async {
+    final doc = _doc(auditoriaId);
+
+    // Las respuestas primero: Firestore no borra en cascada y quedarían
+    // huérfanas, invisibles y ocupando para siempre. De paso se aprovecha el
+    // recorrido para saber qué fotos hay que barrer del almacén local.
+    final claves = <String>[];
+    while (true) {
+      final tanda = await doc.collection('respuestas').limit(400).get();
+      if (tanda.docs.isEmpty) break;
+
+      final lote = _db.batch();
+      for (final r in tanda.docs) {
+        for (final e in (r.data()['evidencias'] as List? ?? const [])) {
+          final id = (e as Map)['id'] as String?;
+          if (id != null) claves.add(id);
+        }
+        lote.delete(r.reference);
+      }
+      await lote.commit();
+    }
+
+    await doc.delete();
+
+    for (final id in claves) {
+      await _almacen.borrarEvidencia(id);
+    }
+    await _almacen.borrar(AlmacenBinarios.claveInforme(auditoriaId));
+    await _almacen.borrar(AlmacenBinarios.claveFirma(auditoriaId, 'auditor'));
+    await _almacen.borrar(AlmacenBinarios.claveFirma(auditoriaId, 'gerente'));
+  }
+
   // ------------------------------------------------------------------- cierre
 
   @override

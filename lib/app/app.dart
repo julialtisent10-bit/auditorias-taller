@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/auditoria/presentation/pages/cuestionario_page.dart';
 import '../features/auditoria/presentation/pages/firma_page.dart';
+import '../features/auditoria/presentation/pages/historico_page.dart';
 import '../features/auditoria/presentation/pages/inicio_auditoria_page.dart';
 import '../features/auditoria/presentation/pages/resumen_page.dart';
 import '../features/centros/presentation/pages/home_page.dart';
@@ -37,6 +38,7 @@ class AuditApp extends ConsumerWidget {
         '/auditoria/resumen': (_) => const ResumenPage(),
         '/auditoria/firma': (_) => const FirmaPage(),
         '/ranking': (_) => const RankingPage(),
+        '/historico': (_) => const HistoricoPage(),
         '/cuestionario/editar': (_) => const EditorPlantillaPage(),
       },
     );

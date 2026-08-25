@@ -46,6 +46,13 @@ class CentroRepository {
           String centroId, Map<String, String> responsables) =>
       _col.doc(centroId).set({'responsables': responsables}, SetOptions(merge: true));
 
+  /// Deja el centro como si nunca se hubiera auditado. Se usa al borrar su
+  /// última auditoría: si no, la ficha seguiría enseñando una puntuación de
+  /// algo que ya no existe.
+  Future<void> limpiarResumen(String centroId) => _col
+      .doc(centroId)
+      .set({'resumen': const ResumenCentro().toJson()}, SetOptions(merge: true));
+
   /// Se llama al cerrar una auditoría. Desplaza la última puntuación a
   /// "penúltima" para poder mostrar la tendencia sin releer el histórico.
   ///

@@ -71,6 +71,22 @@ final plantillaProvider = FutureProvider.family<Plantilla, String?>(
 final historicoProvider = StreamProvider<List<Auditoria>>(
     (ref) => ref.watch(auditoriaRepositoryProvider).historico());
 
+/// Todas las auditorías del usuario, abiertas y cerradas, de la más reciente
+/// a la más antigua. Alimenta la pantalla de histórico.
+final todasLasAuditoriasProvider = StreamProvider<List<Auditoria>>((ref) {
+  final repo = ref.watch(auditoriaRepositoryProvider);
+  final uid = ref.watch(auditorUidProvider);
+
+  // Se combinan los dos flujos que ya existen en lugar de añadir una consulta
+  // nueva: cerradas de todos los centros y abiertas propias.
+  return repo.historico(limite: 200).asyncMap((cerradas) async {
+    final abiertas = await repo.enCurso(auditorUid: uid, limite: 50).first;
+    final todas = [...cerradas, ...abiertas];
+    todas.sort((a, b) => b.fecha.compareTo(a.fecha));
+    return todas;
+  });
+});
+
 /// Auditorías abiertas del usuario actual, para poder retomarlas.
 final enCursoProvider = StreamProvider<List<Auditoria>>((ref) => ref
     .watch(auditoriaRepositoryProvider)

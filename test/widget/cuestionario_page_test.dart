@@ -66,6 +66,9 @@ class RepoFalso implements AuditoriaRepository {
       const Stream.empty();
 
   @override
+  Future<void> eliminar(String auditoriaId) async {}
+
+  @override
   Future<void> finalizar(
     String auditoriaId, {
     required ResultadoAuditoria resultado,

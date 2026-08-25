@@ -44,6 +44,10 @@ abstract class AuditoriaRepository {
   Future<void> eliminarEvidencia(
       String auditoriaId, String preguntaId, Evidencia evidencia);
 
+  /// Borra una auditoría y todo lo que cuelga de ella: sus respuestas en la
+  /// nube y sus fotos, firmas e informe en este dispositivo.
+  Future<void> eliminar(String auditoriaId);
+
   /// Cierra la auditoría: fija el resultado, adjunta firmas, guarda el
   /// informe en el almacén local y lo encola para subir.
   Future<void> finalizar(
