@@ -238,6 +238,59 @@ class PlantillaRepository {
   /// Fuerza que la próxima carga vaya a Firestore en vez de servir la copia
   /// en memoria. Se llama tras cualquier edición.
   void invalidarCache() => _cache = null;
+
+  // ------------------------------------------------------------ mantenimiento
+
+  /// Cuestionarios guardados en la nube que ya no son el vigente.
+  ///
+  /// Quedan ahí al sustituir un cuestionario por otro. No estorban —nadie los
+  /// lee— pero conviene poder verlos y quitarlos sin pelearse con la consola.
+  Future<List<ResumenPlantilla>> otras(String idVigente) async {
+    final docs = await _db.collection('plantillas').get();
+    final resumen = <ResumenPlantilla>[];
+
+    for (final doc in docs.docs) {
+      if (doc.id == idVigente) continue;
+      final preguntas = await doc.reference.collection('preguntas').count().get();
+      resumen.add(ResumenPlantilla(
+        id: doc.id,
+        nombre: doc.data()['nombre'] as String? ?? doc.id,
+        version: (doc.data()['version'] as num?)?.toInt() ?? 1,
+        preguntas: preguntas.count ?? 0,
+      ));
+    }
+    return resumen;
+  }
+
+  /// Borra un cuestionario y todas sus preguntas.
+  ///
+  /// Firestore no borra en cascada: eliminar el documento dejaría la
+  /// subcolección de preguntas huérfana y ocupando espacio para siempre, así
+  /// que hay que barrerla explícitamente antes.
+  ///
+  /// Las auditorías que usaron este cuestionario NO se ven afectadas: cada una
+  /// guardó su propia copia de las preguntas el día que se hizo.
+  Future<void> eliminarPlantilla(String plantillaId, {required String idVigente}) async {
+    if (plantillaId == idVigente) {
+      throw ArgumentError('No se puede borrar el cuestionario en uso');
+    }
+
+    final doc = _db.collection('plantillas').doc(plantillaId);
+
+    // Por tandas: un lote de Firestore admite 500 operaciones como mucho.
+    while (true) {
+      final tanda = await doc.collection('preguntas').limit(400).get();
+      if (tanda.docs.isEmpty) break;
+      final lote = _db.batch();
+      for (final p in tanda.docs) {
+        lote.delete(p.reference);
+      }
+      await lote.commit();
+    }
+
+    await doc.delete();
+    _cache = null;
+  }
 }
 
 /// Una pregunta junto con su estado dentro del cuestionario. Solo la usa el
@@ -247,6 +300,22 @@ class PreguntaEditable {
 
   final Pregunta pregunta;
   final bool activa;
+}
+
+/// Ficha mínima de un cuestionario guardado, para poder listarlos sin
+/// cargar todas sus preguntas.
+class ResumenPlantilla {
+  const ResumenPlantilla({
+    required this.id,
+    required this.nombre,
+    required this.version,
+    required this.preguntas,
+  });
+
+  final String id;
+  final String nombre;
+  final int version;
+  final int preguntas;
 }
 
 class PlantillaInvalida implements Exception {

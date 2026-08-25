@@ -55,7 +55,16 @@ class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar cuestionario')),
+      appBar: AppBar(
+        title: const Text('Editar cuestionario'),
+        actions: [
+          IconButton(
+            tooltip: 'Cuestionarios antiguos',
+            icon: const Icon(Icons.cleaning_services_outlined),
+            onPressed: _limpiarAntiguos,
+          ),
+        ],
+      ),
       body: FutureBuilder<_EstadoEditor>(
         future: _futuro,
         builder: (context, snap) {
@@ -81,6 +90,90 @@ class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
         },
       ),
     );
+  }
+
+  /// Muestra los cuestionarios que quedaron en la nube al sustituir uno por
+  /// otro, y permite borrarlos. Nadie los lee, pero ocupan y despistan.
+  Future<void> _limpiarAntiguos() async {
+    final repo = ref.read(plantillaRepositoryProvider);
+    final vigente = (await _futuro)?.plantilla;
+    if (vigente == null || !mounted) return;
+
+    final otras = await repo.otras(vigente.id);
+    if (!mounted) return;
+
+    if (otras.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay cuestionarios antiguos guardados.')),
+      );
+      return;
+    }
+
+    final aBorrar = await showDialog<ResumenPlantilla>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cuestionarios antiguos'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Quedaron guardados al sustituir el cuestionario. Ya no se usan.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            for (final o in otras)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(o.nombre, style: const TextStyle(fontSize: 14)),
+                subtitle: Text('${o.preguntas} preguntas · versión ${o.version}',
+                    style: const TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.delete_outline),
+                onTap: () => Navigator.pop(ctx, o),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cerrar')),
+        ],
+      ),
+    );
+    if (aBorrar == null || !mounted) return;
+
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Borrar «${aBorrar.nombre}»'),
+        content: Text(
+          'Se eliminarán sus ${aBorrar.preguntas} preguntas de forma '
+          'permanente.\n\nLas auditorías que lo usaron no se ven afectadas: '
+          'cada una guardó su propia copia de las preguntas.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Borrar')),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+
+    try {
+      await repo.eliminarPlantilla(aBorrar.id, idVigente: vigente.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('«${aBorrar.nombre}» eliminado.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('No se pudo borrar: $e')));
+    }
   }
 
   Future<void> _sembrar(Plantilla plantilla) async {
