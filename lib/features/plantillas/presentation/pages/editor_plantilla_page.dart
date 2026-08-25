@@ -23,7 +23,7 @@ class EditorPlantillaPage extends ConsumerStatefulWidget {
 }
 
 class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
-  Future<Plantilla>? _futuro;
+  Future<_EstadoEditor>? _futuro;
   bool _sembrando = false;
 
   @override
@@ -32,17 +32,31 @@ class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
     _recargar();
   }
 
+  /// Carga la plantilla y comprueba si ya vive en Firestore, en UNA sola
+  /// operación.
+  ///
+  /// Estaban separadas en dos widgets y la comprobación se quedaba pegada al
+  /// estado del hijo: tras subir el cuestionario, Flutter reutilizaba ese
+  /// estado y seguía creyendo que no era editable, así que volvía a pedir la
+  /// subida una y otra vez. Con las dos cosas en el mismo futuro, recargar
+  /// refresca ambas por construcción.
   void _recargar() {
     final repo = ref.read(plantillaRepositoryProvider);
     repo.invalidarCache();
-    setState(() => _futuro = repo.cargar());
+    setState(() {
+      _futuro = () async {
+        final plantilla = await repo.cargar();
+        final editable = await repo.esEditable(plantilla.id);
+        return _EstadoEditor(plantilla: plantilla, editable: editable);
+      }();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Editar cuestionario')),
-      body: FutureBuilder<Plantilla>(
+      body: FutureBuilder<_EstadoEditor>(
         future: _futuro,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
@@ -56,13 +70,14 @@ class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
             );
           }
 
-          final plantilla = snap.data!;
-          return _Contenido(
-            plantilla: plantilla,
-            sembrando: _sembrando,
-            onSembrar: () => _sembrar(plantilla),
-            onCambio: _recargar,
-          );
+          final estado = snap.data!;
+          if (!estado.editable) {
+            return _PrimeraVez(
+              sembrando: _sembrando,
+              onSembrar: () => _sembrar(estado.plantilla),
+            );
+          }
+          return _Listado(plantilla: estado.plantilla, onCambio: _recargar);
         },
       ),
     );
@@ -87,62 +102,11 @@ class _EditorPlantillaPageState extends ConsumerState<EditorPlantillaPage> {
   }
 }
 
-class _Contenido extends ConsumerStatefulWidget {
-  const _Contenido({
-    required this.plantilla,
-    required this.sembrando,
-    required this.onSembrar,
-    required this.onCambio,
-  });
+class _EstadoEditor {
+  const _EstadoEditor({required this.plantilla, required this.editable});
 
   final Plantilla plantilla;
-  final bool sembrando;
-  final VoidCallback onSembrar;
-  final VoidCallback onCambio;
-
-  @override
-  ConsumerState<_Contenido> createState() => _ContenidoState();
-}
-
-class _ContenidoState extends ConsumerState<_Contenido> {
-  // La comprobacion se lanza UNA vez y se guarda. Creandola dentro de build()
-  // se dispararia una consulta nueva en cada reconstruccion, con su parpadeo
-  // de indicador de carga y su lectura de Firestore cada vez.
-  late Future<bool> _editable;
-
-  @override
-  void initState() {
-    super.initState();
-    _editable =
-        ref.read(plantillaRepositoryProvider).esEditable(widget.plantilla.id);
-  }
-
-  @override
-  void didUpdateWidget(_Contenido anterior) {
-    super.didUpdateWidget(anterior);
-    if (anterior.plantilla.id != widget.plantilla.id) {
-      _editable =
-          ref.read(plantillaRepositoryProvider).esEditable(widget.plantilla.id);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _editable,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snap.data != true) {
-          return _PrimeraVez(
-              sembrando: widget.sembrando, onSembrar: widget.onSembrar);
-        }
-        return _Listado(
-            plantilla: widget.plantilla, onCambio: widget.onCambio);
-      },
-    );
-  }
+  final bool editable;
 }
 
 /// Estado inicial: el cuestionario solo existe dentro de la aplicación.

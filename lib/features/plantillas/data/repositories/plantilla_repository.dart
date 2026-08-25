@@ -186,13 +186,13 @@ class PlantillaRepository {
   ///
   /// Mientras solo exista el asset empaquetado, cualquier cambio exigiría
   /// recompilar la aplicación; por eso el editor obliga a sembrarlo primero.
+  ///
+  /// No se capturan errores a propósito: si la lectura falla (permisos, red),
+  /// el editor debe enseñar ese fallo. Devolver false lo disfrazaba de
+  /// "todavía no está subido" y llevaba al usuario a subirlo una y otra vez.
   Future<bool> esEditable(String plantillaId) async {
-    try {
-      final doc = await _db.collection('plantillas').doc(plantillaId).get();
-      return doc.exists;
-    } catch (_) {
-      return false;
-    }
+    final doc = await _db.collection('plantillas').doc(plantillaId).get();
+    return doc.exists;
   }
 
   Future<void> guardarPregunta(String plantillaId, Pregunta pregunta) async {

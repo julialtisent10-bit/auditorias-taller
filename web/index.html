@@ -39,6 +39,29 @@
     #arranque img { width: 76px; height: 76px; }
     #arranque p { margin: 0; font-size: 14px; opacity: .85; }
     .oculto { opacity: 0; pointer-events: none; }
+
+    /* Aviso de version nueva: abajo y centrado, fuera del alcance del pulgar
+       para que no se pulse sin querer en mitad de una auditoria. */
+    #aviso-version {
+      position: fixed;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+      transform: translateX(-50%);
+      z-index: 9998;
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px 10px 16px;
+      border-radius: 999px;
+      background: #0E4F8B; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.35);
+    }
+    #aviso-version button {
+      border: 0; border-radius: 999px; cursor: pointer;
+      padding: 7px 14px;
+      background: #fff; color: #0E4F8B;
+      font: inherit; font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -56,6 +79,43 @@
       navigator.storage.persisted().then(function (yaEs) {
         if (!yaEs) { navigator.storage.persist(); }
       });
+    }
+
+    // Aviso de version nueva. Una app web instalada guarda una copia local
+    // para funcionar sin cobertura, asi que al publicar una version nueva
+    // seguiria abriendose la vieja hasta que el usuario la cierre del todo.
+    // Esto detecta la actualizacion y ofrece aplicarla en el momento.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(function (registro) {
+        registro.addEventListener('updatefound', function () {
+          var entrante = registro.installing;
+          if (!entrante) return;
+          entrante.addEventListener('statechange', function () {
+            // 'installed' con un controlador ya activo significa que hay una
+            // version nueva esperando; sin controlador es la primera visita.
+            if (entrante.state === 'installed' && navigator.serviceWorker.controller) {
+              mostrarAvisoActualizacion();
+            }
+          });
+        });
+        // Comprueba al arrancar y luego cada media hora, por si la sesion
+        // dura todo el dia dentro del taller.
+        registro.update();
+        setInterval(function () { registro.update(); }, 30 * 60 * 1000);
+      });
+    }
+
+    function mostrarAvisoActualizacion() {
+      if (document.getElementById('aviso-version')) return;
+      var aviso = document.createElement('div');
+      aviso.id = 'aviso-version';
+      aviso.innerHTML =
+        '<span>Hay una versión nueva</span>' +
+        '<button type="button">Actualizar</button>';
+      aviso.querySelector('button').addEventListener('click', function () {
+        window.location.reload();
+      });
+      document.body.appendChild(aviso);
     }
 
     window.addEventListener('flutter-first-frame', function () {
