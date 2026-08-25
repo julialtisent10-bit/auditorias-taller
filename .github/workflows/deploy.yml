@@ -35,7 +35,14 @@ jobs:
       # proyecto en usuario.github.io/nombre-repo/, no en la raíz. Sin este
       # ajuste, la app pide sus propios ficheros en /main.dart.js en lugar
       # de /nombre-repo/main.dart.js y la pantalla se queda en blanco.
-      - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+      # --pwa-strategy=none: Flutter genera un service worker que se
+      # desregistra a si mismo y recarga la pagina, con lo que la app no
+      # abriria sin cobertura. Se usa el de web/sw.js en su lugar.
+      - run: flutter build web --release --pwa-strategy=none --base-href "/${{ github.event.repository.name }}/"
+
+      # La version del almacen local es el commit: cada despliegue estrena
+      # cache y no quedan restos del anterior mezclados.
+      - run: sed -i "s/__VERSION__/${{ github.sha }}/" build/web/sw.js
 
       - uses: actions/upload-pages-artifact@v3
         with:

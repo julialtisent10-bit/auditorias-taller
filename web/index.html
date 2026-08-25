@@ -81,31 +81,61 @@
       });
     }
 
-    // Aviso de version nueva. Una app web instalada guarda una copia local
-    // para funcionar sin cobertura, asi que al publicar una version nueva
-    // seguiria abriendose la vieja hasta que el usuario la cierre del todo.
-    // Esto detecta la actualizacion y ofrece aplicarla en el momento.
+    // Registro del service worker propio.
+    //
+    // Se registra a mano y no a traves de Flutter porque el suyo se limita a
+    // desregistrarse y recargar la pagina, dejando la aplicacion inservible
+    // sin cobertura. La compilacion usa --pwa-strategy=none justamente para
+    // que no genere el suyo y no se peleen por el mismo ambito.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(function (registro) {
-        registro.addEventListener('updatefound', function () {
-          var entrante = registro.installing;
-          if (!entrante) return;
-          entrante.addEventListener('statechange', function () {
-            // 'installed' con un controlador ya activo significa que hay una
-            // version nueva esperando; sin controlador es la primera visita.
-            if (entrante.state === 'installed' && navigator.serviceWorker.controller) {
-              mostrarAvisoActualizacion();
-            }
+      var recargando = false;
+
+      // Cuando el nuevo toma el relevo hay que recargar para estrenarlo.
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (recargando) return;   // puede dispararse mas de una vez
+        recargando = true;
+        window.location.reload();
+      });
+
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (registro) {
+          function proponer(trabajador) {
+            if (!trabajador) return;
+            mostrarAvisoActualizacion(function () {
+              trabajador.postMessage('skipWaiting');
+            });
+          }
+
+          // Puede haber quedado una version esperando de una visita anterior.
+          if (registro.waiting && navigator.serviceWorker.controller) {
+            proponer(registro.waiting);
+          }
+
+          registro.addEventListener('updatefound', function () {
+            var entrante = registro.installing;
+            if (!entrante) return;
+            entrante.addEventListener('statechange', function () {
+              // 'installed' con un controlador ya activo significa que hay
+              // version nueva lista; sin controlador es la primera visita y
+              // no hay nada que avisar.
+              if (entrante.state === 'installed' && navigator.serviceWorker.controller) {
+                proponer(entrante);
+              }
+            });
           });
+
+          // Comprueba cada media hora, por si la sesion dura toda la jornada.
+          setInterval(function () { registro.update(); }, 30 * 60 * 1000);
+        }).catch(function (e) {
+          // Sin service worker la aplicacion funciona igual mientras haya
+          // red; solo se pierde el poder abrirla sin cobertura. No es motivo
+          // para enseñarle un error al auditor.
+          console.warn('No se pudo registrar el service worker:', e);
         });
-        // Comprueba al arrancar y luego cada media hora, por si la sesion
-        // dura todo el dia dentro del taller.
-        registro.update();
-        setInterval(function () { registro.update(); }, 30 * 60 * 1000);
       });
     }
 
-    function mostrarAvisoActualizacion() {
+    function mostrarAvisoActualizacion(alPulsar) {
       if (document.getElementById('aviso-version')) return;
       var aviso = document.createElement('div');
       aviso.id = 'aviso-version';
@@ -113,7 +143,9 @@
         '<span>Hay una versión nueva</span>' +
         '<button type="button">Actualizar</button>';
       aviso.querySelector('button').addEventListener('click', function () {
-        window.location.reload();
+        aviso.querySelector('button').disabled = true;
+        aviso.querySelector('span').textContent = 'Actualizando…';
+        alPulsar();
       });
       document.body.appendChild(aviso);
     }
