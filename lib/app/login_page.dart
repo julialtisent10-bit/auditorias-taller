@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Acceso con correo y contraseña.
 ///
@@ -62,21 +63,42 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
-          child: Column(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+          child: ConstrainedBox(
+            // Tope de ancho: en un portátil o una tablet, los campos
+            // estirados de lado a lado quedan ridículos.
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.fact_check_outlined,
-                  size: 64, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 12),
+              // El logotipo viene en un solo color plano, así que se tiñe
+              // según el tema en vez de arrastrar dos ficheros distintos.
+              SvgPicture.asset(
+                'assets/branding/scaitt_logo.svg',
+                height: 34,
+                colorFilter: ColorFilter.mode(esquema.onSurface, BlendMode.srcIn),
+              ),
+              const SizedBox(height: 28),
               Text('Auditorías de taller',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 32),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text('Vehículo industrial',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 13,
+                      letterSpacing: 1.6,
+                      color: esquema.onSurfaceVariant)),
+              const SizedBox(height: 36),
               TextField(
                 controller: _correo,
                 keyboardType: TextInputType.emailAddress,
@@ -110,9 +132,14 @@ class _LoginPageState extends State<LoginPage> {
                         width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Entrar'),
               ),
+              const SizedBox(height: 40),
+              Text('Uso interno del grupo',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: esquema.outline)),
             ],
           ),
         ),
+      ),
       ),
     );
   }
