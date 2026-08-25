@@ -16,11 +16,46 @@ class CuestionarioPage extends ConsumerStatefulWidget {
 class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
     with SingleTickerProviderStateMixin {
   TabController? _tabs;
+  final _busqueda = TextEditingController();
+  bool _buscando = false;
 
   @override
   void dispose() {
     _tabs?.dispose();
+    _busqueda.dispose();
     super.dispose();
+  }
+
+  /// Confirma antes de abandonar una auditoría a medias.
+  ///
+  /// Lo respondido no se pierde —se guarda al momento y la auditoría queda
+  /// abierta en el histórico— pero salir sin querer en mitad de un taller y
+  /// creer que se ha perdido todo es un susto evitable.
+  Future<bool> _confirmarSalida(AuditoriaState state) async {
+    if (state.resultado.completa) return true;
+
+    final pendientes = state.preguntas.length -
+        state.respuestas.values.where((r) => r.respondida).length;
+
+    final salir = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Salir de la auditoría'),
+        content: Text(
+          'Quedan $pendientes preguntas por responder.\n\nLo contestado se '
+          'guarda y podrás continuar desde «Auditorías» cuando quieras.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Seguir aquí')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Salir')),
+        ],
+      ),
+    );
+    return salir ?? false;
   }
 
   @override
@@ -35,9 +70,30 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
       _tabs = TabController(length: areas.length, vsync: this);
     }
 
-    return Scaffold(
+    final filtro = _busqueda.text.trim().toLowerCase();
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (yaSalio, _) async {
+        if (yaSalio) return;
+        if (await _confirmarSalida(state) && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
-        title: Column(
+        title: _buscando
+            ? TextField(
+                controller: _busqueda,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                style: const TextStyle(fontSize: 16),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar en las preguntas…',
+                  border: InputBorder.none,
+                ),
+              )
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(state.centroNombre, style: const TextStyle(fontSize: 16)),
@@ -46,6 +102,14 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: _buscando ? 'Cerrar búsqueda' : 'Buscar',
+            icon: Icon(_buscando ? Icons.close : Icons.search),
+            onPressed: () => setState(() {
+              _buscando = !_buscando;
+              if (!_buscando) _busqueda.clear();
+            }),
+          ),
           // Indicador de autoguardado: el auditor necesita ver que no pierde datos.
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -57,7 +121,7 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
             ),
           ),
         ],
-        bottom: TabBar(
+        bottom: filtro.isNotEmpty ? null : TabBar(
           controller: _tabs,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
@@ -73,16 +137,21 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabs,
-        children: [
-          for (final area in areas) _AreaView(area: area),
-        ],
-      ),
+      // Con búsqueda activa se deja de pintar por pestañas: lo que se quiere
+      // entonces es ver los resultados de todas las áreas a la vez.
+      body: filtro.isNotEmpty
+          ? _Resultados(filtro: filtro)
+          : TabBarView(
+              controller: _tabs,
+              children: [
+                for (final area in areas) _AreaView(area: area),
+              ],
+            ),
       bottomNavigationBar: _BarraInferior(
         onFinalizar: state.puedeFinalizar
             ? () => Navigator.of(context).pushNamed('/auditoria/resumen')
             : null,
+      ),
       ),
     );
   }
@@ -249,6 +318,73 @@ class _BarraInferior extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Resultados de la búsqueda, planos y de todas las áreas a la vez.
+///
+/// Con 47 preguntas repartidas en siete pestañas, localizar una concreta
+/// obligaba a recordar en qué área estaba. Buscar por texto lo resuelve.
+class _Resultados extends ConsumerWidget {
+  const _Resultados({required this.filtro});
+
+  final String filtro;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(auditoriaControllerProvider);
+    final porCodigo = {for (final a in state.areas) a.codigo: a};
+
+    final encontradas = state.preguntas.where((p) {
+      final area = porCodigo[p.areaCodigo]?.nombre ?? '';
+      return '${p.texto} ${p.ayuda ?? ''} ${p.bloque} $area'
+          .toLowerCase()
+          .contains(filtro);
+    }).toList();
+
+    if (encontradas.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text('Ninguna pregunta contiene «$filtro».',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
+          child: Text(
+            '${encontradas.length} pregunta${encontradas.length == 1 ? '' : 's'}',
+            style: TextStyle(
+                fontSize: 12, color: Theme.of(context).colorScheme.outline),
+          ),
+        ),
+        for (final p in encontradas) ...[
+          // Se indica el área porque aquí se mezclan todas y sin ese dato
+          // no se sabe qué se está respondiendo.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+            child: Text(
+              (porCodigo[p.areaCodigo]?.nombre ?? '').toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: porCodigo[p.areaCodigo]?.color,
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          PreguntaCard(
+            pregunta: p,
+            colorArea: porCodigo[p.areaCodigo]?.color ?? Colors.blueGrey,
+          ),
+        ],
+      ],
     );
   }
 }

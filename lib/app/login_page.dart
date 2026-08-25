@@ -50,6 +50,42 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// Envía el correo de restablecimiento.
+  ///
+  /// Sin esto, quien olvidara su contraseña quedaba fuera hasta que alguien
+  /// se la cambiara desde la consola de Firebase.
+  Future<void> _recuperar() async {
+    final correo = _correo.text.trim();
+    if (correo.isEmpty) {
+      setState(() => _error = 'Escribe tu correo y vuelve a pulsar.');
+      return;
+    }
+
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: correo);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Te hemos enviado un correo a $correo para que la '
+              'cambies. Mira también la carpeta de no deseado.'),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      // No se distingue si la cuenta existe: decirlo permitiría averiguar
+      // desde fuera qué correos están dados de alta.
+      setState(() => _error = e.code == 'invalid-email'
+          ? 'El correo no tiene un formato válido.'
+          : 'No se pudo enviar el correo (${e.code}).');
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
   static String _mensaje(String codigo) => switch (codigo) {
         'invalid-email' => 'El correo no tiene un formato válido.',
         'user-disabled' => 'Esta cuenta está deshabilitada.',
@@ -124,7 +160,15 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text(_error!,
                       style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
                 ),
-              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _cargando ? null : _recuperar,
+                  child: const Text('¿Olvidaste tu contraseña?',
+                      style: TextStyle(fontSize: 13)),
+                ),
+              ),
+              const SizedBox(height: 8),
               FilledButton(
                 onPressed: _cargando ? null : _entrar,
                 child: _cargando

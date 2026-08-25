@@ -266,7 +266,7 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
         centroNombre: centro.nombre,
         fecha: _fecha,
         preguntas: plantilla.preguntas,
-        pesosArea: plantilla.pesosArea,
+        pesosArea: plantilla.pesosEfectivos,
         areas: AreaVista.listaDesde(plantilla.areas),
       );
 

@@ -184,7 +184,9 @@ class _SelectorRespuesta extends StatelessWidget {
       children: [
         for (final v in opciones)
           ChoiceChip(
-            label: Text(_etiquetasCortas[v]!),
+            label: Text(v == ValorRespuesta.noAplica
+                ? 'N/A'
+                : '${v.puntuacion} · ${_etiquetasCortas[v]}'),
             selected: valor == v,
             showCheckmark: false,
             selectedColor: _colores[v],

@@ -165,7 +165,8 @@ void main() {
 
     expect(find.text('Todo el personal utiliza calzado de seguridad'), findsOneWidget);
 
-    await tester.tap(find.text('Cumple').first);
+    // El chip muestra la puntuacion del Excel junto a la etiqueta.
+    await tester.tap(find.text('2 · Cumple').first);
     await tester.pumpAndSettle();
 
     expect(repo.guardadas['q1']?.valor?.codigo, 'CUMPLE');
@@ -181,7 +182,7 @@ void main() {
     await tester.tap(find.text('Taller'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('No cumple').first);
+    await tester.tap(find.text('0 · No cumple').first);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('crítica(s) incumplida(s)'), findsOneWidget);

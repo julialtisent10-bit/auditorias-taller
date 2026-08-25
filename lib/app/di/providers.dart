@@ -108,7 +108,7 @@ Future<void> reanudarAuditoria(WidgetRef ref, Auditoria auditoria) async {
     centroNombre: auditoria.centroNombre,
     fecha: auditoria.fecha,
     preguntas: plantilla.preguntas,
-    pesosArea: plantilla.pesosArea,
+    pesosArea: plantilla.pesosEfectivos,
     areas: AreaVista.listaDesde(plantilla.areas),
     respuestasPrevias: respuestas,
   );

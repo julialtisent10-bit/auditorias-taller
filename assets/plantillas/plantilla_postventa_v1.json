@@ -4,7 +4,7 @@
   "version": 1,
   "estado": "publicada",
   "vigenteDesde": "2026-01-01",
-  "notas": "Convertida del Excel «Auditoría talleres». Escala 0/1/2 con N/A: 0 = No cumple, 1 = Cumple parcialmente, 2 = Cumple. Todas las preguntas pesan igual, como en el original.",
+  "notas": "Convertida del Excel «Auditoría talleres». Escala 0/1/2 con N/A: 0 = No cumple, 1 = Cumple parcialmente, 2 = Cumple. El peso de cada área se recalcula solo según cuántas preguntas tenga, de modo que todas las preguntas valen lo mismo aunque se añadan o se retiren.",
   "pesosArea": {
     "delegacion": 0.1064,
     "administracion": 0.1064,
@@ -724,5 +724,6 @@
         "NO_CUMPLE"
       ]
     }
-  ]
+  ],
+  "pesosAutomaticos": true
 }
