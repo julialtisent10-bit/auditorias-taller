@@ -4,7 +4,9 @@ import 'package:printing/printing.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../../core/almacen/almacen_binarios.dart';
+import '../../../centros/data/repositories/centro_repository.dart';
 import '../../domain/entities/auditoria.dart';
+import '../../domain/repositories/auditoria_repository.dart';
 
 /// Todas las auditorías, abiertas y cerradas.
 ///
@@ -131,9 +133,14 @@ class _Fila extends ConsumerWidget {
   }
 
   Future<void> _borrar(BuildContext context, WidgetRef ref) async {
-    // Se captura antes del diálogo: después de ese await, este widget puede
-    // haber desaparecido de la lista y su contexto ya no sirve.
+    // Todo lo que dependa del widget se captura ANTES de los await. Al
+    // borrar, el stream reemite, la lista se reconstruye sin esta fila y su
+    // elemento queda descartado: usar `context` o `ref` después de ese punto
+    // lanza, y el catch lo mostraba como «no se pudo borrar» cuando en
+    // realidad sí se había borrado.
     final mensajero = ScaffoldMessenger.of(context);
+    final auditorias = ref.read(auditoriaRepositoryProvider);
+    final centros = ref.read(centroRepositoryProvider);
 
     final confirmado = await showDialog<bool>(
       context: context,
@@ -156,8 +163,8 @@ class _Fila extends ConsumerWidget {
     if (confirmado != true) return;
 
     try {
-      await ref.read(auditoriaRepositoryProvider).eliminar(auditoria.id);
-      await _recalcularCentro(ref);
+      await auditorias.eliminar(auditoria.id);
+      await _recalcularCentro(auditorias, centros);
       mensajero.showSnackBar(const SnackBar(content: Text('Auditoría borrada.')));
     } catch (e) {
       mensajero.showSnackBar(SnackBar(content: Text('No se pudo borrar: $e')));
@@ -167,12 +174,10 @@ class _Fila extends ConsumerWidget {
   /// La ficha del centro guarda la última puntuación para pintar la tendencia
   /// sin releer el histórico. Al borrar una auditoría ese dato puede quedar
   /// apuntando a algo que ya no existe, así que se rehace con lo que queda.
-  Future<void> _recalcularCentro(WidgetRef ref) async {
-    final repo = ref.read(auditoriaRepositoryProvider);
-    final centros = ref.read(centroRepositoryProvider);
-
+  Future<void> _recalcularCentro(
+      AuditoriaRepository repo, CentroRepository centros) async {
     final cerradas =
-        await repo.historico(centroId: auditoria.centroId, limite: 5).first;
+        await repo.historico(centroId: auditoria.centroId, limite: 50).first;
 
     if (cerradas.isEmpty) {
       await centros.limpiarResumen(auditoria.centroId);

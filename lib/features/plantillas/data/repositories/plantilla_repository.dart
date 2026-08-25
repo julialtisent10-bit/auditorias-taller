@@ -22,6 +22,10 @@ class PlantillaRepository {
 
   Plantilla? _cache;
 
+  /// Id del cuestionario del asset, recordado tras la primera lectura para
+  /// poder resolver la cache sin volver a abrir el fichero.
+  String? _idAsset;
+
   /// Carga el cuestionario vigente.
   ///
   /// La plantilla que trae la aplicación manda: su identificador es el del
@@ -35,13 +39,32 @@ class PlantillaRepository {
   /// cuestionario nuevo no aparecía por ninguna parte y no había forma de
   /// llegar a él desde la interfaz.
   Future<Plantilla> cargar({String? plantillaId}) async {
+    // La cache se mira ANTES de tocar el asset: leerlo y deserializarlo en
+    // cada llamada para acabar devolviendo la copia en memoria era
+    // exactamente el trabajo que la cache existe para ahorrar.
+    if (_cache != null &&
+        (plantillaId == null || _cache!.id == plantillaId) &&
+        (plantillaId != null || _cache!.id == _idAsset)) {
+      return _cache!;
+    }
+
     final base = await _desdeAsset();
+    _idAsset = base.id;
     final id = plantillaId ?? base.id;
 
     if (_cache != null && _cache!.id == id) return _cache!;
 
     final remota = await _intentarRemota(id);
-    final plantilla = remota ?? (id == base.id ? base : await _desdeAsset());
+
+    // Si se pidio una plantilla concreta y no aparece, es un error, no una
+    // excusa para servir otra: las respuestas de esa auditoria referencian
+    // preguntas de ESE cuestionario y con otro saldrian todas en blanco y la
+    // puntuacion a cero, sin ningun aviso.
+    if (remota == null && id != base.id) {
+      throw PlantillaNoEncontrada(id);
+    }
+
+    final plantilla = remota ?? base;
 
     final errores = plantilla.validar();
     if (errores.isNotEmpty) {
@@ -316,6 +339,18 @@ class ResumenPlantilla {
   final String nombre;
   final int version;
   final int preguntas;
+}
+
+/// Se pidió un cuestionario concreto que ya no existe. Pasa al abrir una
+/// auditoría hecha con una plantilla que después se borró.
+class PlantillaNoEncontrada implements Exception {
+  const PlantillaNoEncontrada(this.plantillaId);
+  final String plantillaId;
+
+  @override
+  String toString() =>
+      'El cuestionario «$plantillaId» ya no existe. Se usó en esta auditoría '
+      'y se ha borrado, así que no se puede reconstruir tal y como se pasó.';
 }
 
 class PlantillaInvalida implements Exception {

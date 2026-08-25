@@ -103,8 +103,19 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
   /// filtrado en cliente es gratis y no hay índices que mantener.
   @override
   Stream<List<Auditoria>> historico({String? centroId, int limite = 50}) {
+    // Ordenar antes de limitar. Con `limit` a secas Firestore devuelve un
+    // subconjunto arbitrario, y quien luego busque «la más reciente» entre
+    // ellas puede no tenerla siquiera en el lote.
+    //
+    // Con centroId se ordena por documento en lugar de por fecha: combinar
+    // un where de igualdad con un orderBy sobre otro campo exigiría declarar
+    // un índice compuesto. El orden real lo pone el sort de más abajo, y el
+    // límite alto deja margen de sobra para que quepan todas las del centro.
     final Query<Map<String, dynamic>> consulta = centroId != null
-        ? _auditorias.where('centroId', isEqualTo: centroId).limit(limite)
+        ? _auditorias
+            .where('centroId', isEqualTo: centroId)
+            .orderBy(FieldPath.documentId)
+            .limit(limite)
         : _auditorias.orderBy('fecha', descending: true).limit(limite);
 
     return consulta.snapshots().map((s) {
@@ -121,6 +132,7 @@ class AuditoriaRepositoryImpl implements AuditoriaRepository {
   Stream<List<Auditoria>> enCurso({required String auditorUid, int limite = 20}) {
     return _auditorias
         .where('auditorUid', isEqualTo: auditorUid)
+        .orderBy(FieldPath.documentId)
         .limit(limite)
         .snapshots()
         .map((s) {

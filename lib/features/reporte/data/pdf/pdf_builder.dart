@@ -15,12 +15,6 @@ class AreaInfo {
   final PdfColor color;
 }
 
-/// Fallback si una auditoría antigua no guardó sus áreas. Solo evita que el
-/// informe salga vacío; lo normal es que vengan en [DatosReporte.areas].
-const areasPorDefecto = <AreaInfo>[
-  AreaInfo('general', 'General', PdfColor.fromInt(0xFF546E7A)),
-];
-
 /// Tipografía incrustada en el informe.
 ///
 /// No es un capricho estético. Las fuentes internas del formato PDF
