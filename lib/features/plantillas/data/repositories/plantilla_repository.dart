@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../../../auditoria/domain/entities/pregunta.dart';
 import '../../domain/entities/plantilla.dart';
 
 /// Carga el cuestionario.
@@ -128,7 +129,65 @@ class PlantillaRepository {
       }
       await lote.commit();
     }
+    _cache = null;
   }
+
+  // ------------------------------------------------------------------ edicion
+
+  /// true si el cuestionario ya vive en Firestore y por tanto es editable.
+  ///
+  /// Mientras solo exista el asset empaquetado, cualquier cambio exigiría
+  /// recompilar la aplicación; por eso el editor obliga a sembrarlo primero.
+  Future<bool> esEditable(String plantillaId) async {
+    try {
+      final doc = await _db.collection('plantillas').doc(plantillaId).get();
+      return doc.exists;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> guardarPregunta(String plantillaId, Pregunta pregunta) async {
+    await _db
+        .collection('plantillas')
+        .doc(plantillaId)
+        .collection('preguntas')
+        .doc(pregunta.id)
+        .set(pregunta.toJson(), SetOptions(merge: true));
+    _cache = null;
+  }
+
+  /// Marca la pregunta como inactiva en lugar de borrarla.
+  ///
+  /// Un borrado real dejaría huérfanas las respuestas del histórico que la
+  /// referencian. Desactivarla la saca de las auditorías nuevas y conserva
+  /// la trazabilidad de las antiguas.
+  Future<void> desactivarPregunta(String plantillaId, String preguntaId) async {
+    await _db
+        .collection('plantillas')
+        .doc(plantillaId)
+        .collection('preguntas')
+        .doc(preguntaId)
+        .set({'activa': false}, SetOptions(merge: true));
+    _cache = null;
+  }
+
+  Future<void> guardarPesosArea(
+      String plantillaId, Map<String, double> pesos) async {
+    final suma = pesos.values.fold<double>(0, (s, v) => s + v);
+    if ((suma - 1.0).abs() >= 0.001) {
+      throw ArgumentError('Los pesos de área deben sumar 1.0, suman $suma');
+    }
+    await _db
+        .collection('plantillas')
+        .doc(plantillaId)
+        .set({'pesosArea': pesos}, SetOptions(merge: true));
+    _cache = null;
+  }
+
+  /// Fuerza que la próxima carga vaya a Firestore en vez de servir la copia
+  /// en memoria. Se llama tras cualquier edición.
+  void invalidarCache() => _cache = null;
 }
 
 class PlantillaInvalida implements Exception {

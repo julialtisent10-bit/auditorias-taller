@@ -33,6 +33,48 @@ class Pregunta {
 
   bool exigeFoto(ValorRespuesta? v) => v != null && fotoObligatoriaSi.contains(v);
 
+  Pregunta copyWith({
+    String? areaCodigo,
+    String? bloque,
+    int? orden,
+    String? texto,
+    String? ayuda,
+    int? peso,
+    bool? critica,
+    bool? permiteNA,
+    List<ValorRespuesta>? fotoObligatoriaSi,
+  }) =>
+      Pregunta(
+        id: id,
+        areaCodigo: areaCodigo ?? this.areaCodigo,
+        bloque: bloque ?? this.bloque,
+        orden: orden ?? this.orden,
+        texto: texto ?? this.texto,
+        // Cadena vacía = borrar la ayuda. Sin este caso no habría forma de
+        // quitarla desde el editor, porque null significa "no tocar".
+        ayuda: ayuda == null
+            ? this.ayuda
+            : (ayuda.trim().isEmpty ? null : ayuda.trim()),
+        peso: peso ?? this.peso,
+        critica: critica ?? this.critica,
+        permiteNA: permiteNA ?? this.permiteNA,
+        fotoObligatoriaSi: fotoObligatoriaSi ?? this.fotoObligatoriaSi,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'areaCodigo': areaCodigo,
+        'bloque': bloque,
+        'orden': orden,
+        'texto': texto,
+        'ayuda': ayuda,
+        'peso': peso,
+        'critica': critica,
+        'permiteNA': permiteNA,
+        'fotoObligatoriaSi': fotoObligatoriaSi.map((v) => v.codigo).toList(),
+        'activa': true,
+      };
+
   factory Pregunta.fromJson(Map<String, dynamic> j) => Pregunta(
         id: j['id'] as String,
         areaCodigo: j['areaCodigo'] as String,

@@ -6,6 +6,7 @@ import '../features/auditoria/presentation/pages/firma_page.dart';
 import '../features/auditoria/presentation/pages/inicio_auditoria_page.dart';
 import '../features/auditoria/presentation/pages/resumen_page.dart';
 import '../features/centros/presentation/pages/home_page.dart';
+import '../features/plantillas/presentation/pages/editor_plantilla_page.dart';
 import '../features/ranking/presentation/pages/ranking_page.dart';
 import 'di/providers.dart';
 import 'theme/app_theme.dart';
@@ -36,6 +37,7 @@ class AuditApp extends ConsumerWidget {
         '/auditoria/resumen': (_) => const ResumenPage(),
         '/auditoria/firma': (_) => const FirmaPage(),
         '/ranking': (_) => const RankingPage(),
+        '/cuestionario/editar': (_) => const EditorPlantillaPage(),
       },
     );
   }

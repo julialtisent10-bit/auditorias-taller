@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,6 +22,33 @@ class HomePage extends ConsumerWidget {
             tooltip: 'Ranking',
             icon: const Icon(Icons.leaderboard),
             onPressed: () => Navigator.of(context).pushNamed('/ranking'),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (opcion) {
+              if (opcion == 'cuestionario') {
+                Navigator.of(context).pushNamed('/cuestionario/editar');
+              } else if (opcion == 'salir') {
+                FirebaseAuth.instance.signOut();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'cuestionario',
+                child: ListTile(
+                  leading: Icon(Icons.edit_note),
+                  title: Text('Editar cuestionario'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'salir',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Cerrar sesión'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
