@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/area_vista.dart';
 import '../../../centros/domain/entities/centro.dart';
+import '../../../plantillas/domain/entities/plantilla.dart';
 import '../providers/auditoria_controller.dart';
-import 'cuestionario_page.dart';
 
 /// Paso previo: qué centro, qué día y quién está delante en cada área.
 class InicioAuditoriaPage extends ConsumerStatefulWidget {
@@ -17,11 +18,19 @@ class InicioAuditoriaPage extends ConsumerStatefulWidget {
 class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
   Centro? _centro;
   DateTime _fecha = DateTime.now();
+  /// Un campo por área más el gerente. Se crean cuando llega la plantilla:
+  /// las áreas ya no están fijadas en el código y cada cuestionario trae
+  /// las suyas.
   final _responsables = <String, TextEditingController>{
-    for (final a in areasAuditoria) a.codigo: TextEditingController(),
     'gerente': TextEditingController(),
   };
   bool _creando = false;
+
+  void _prepararCampos(List<AreaPlantilla> areas) {
+    for (final a in areas) {
+      _responsables.putIfAbsent(a.codigo, TextEditingController.new);
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +52,31 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
   @override
   Widget build(BuildContext context) {
     final centros = ref.watch(centrosProvider);
+    final plantilla = ref.watch(plantillaProvider(null));
+
+    // Sin plantilla no se puede saber qué responsables pedir.
+    if (plantilla.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Nueva auditoría')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (plantilla.hasError) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Nueva auditoría')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Text(
+                'No se pudo cargar el cuestionario:\n${plantilla.error}',
+                textAlign: TextAlign.center),
+          ),
+        ),
+      );
+    }
+
+    _prepararCampos(plantilla.value!.areas);
+    final areasVista = AreaVista.listaDesde(plantilla.value!.areas);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nueva auditoría')),
@@ -105,7 +139,7 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 8),
-            for (final area in areasAuditoria)
+            for (final area in areasVista)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: TextField(
@@ -233,6 +267,7 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
         fecha: _fecha,
         preguntas: plantilla.preguntas,
         pesosArea: plantilla.pesosArea,
+        areas: AreaVista.listaDesde(plantilla.areas),
       );
 
       if (mounted) Navigator.of(context).pushReplacementNamed('/auditoria');

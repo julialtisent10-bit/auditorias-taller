@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auditoria/presentation/providers/auditoria_controller.dart';
 
 import '../../core/almacen/almacen_binarios.dart';
+import '../../shared/area_vista.dart';
 import '../../features/auditoria/data/datasources/evidencia_datasource.dart';
 import '../../features/auditoria/data/repositories/auditoria_repository_impl.dart';
 import '../../features/auditoria/domain/entities/auditoria.dart';
@@ -92,6 +93,7 @@ Future<void> reanudarAuditoria(WidgetRef ref, Auditoria auditoria) async {
     fecha: auditoria.fecha,
     preguntas: plantilla.preguntas,
     pesosArea: plantilla.pesosArea,
+    areas: AreaVista.listaDesde(plantilla.areas),
     respuestasPrevias: respuestas,
   );
 }

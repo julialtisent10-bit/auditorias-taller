@@ -1,0 +1,728 @@
+{
+  "id": "pl_postventa_2026",
+  "nombre": "Auditoría Mensual de Postventa",
+  "version": 1,
+  "estado": "publicada",
+  "vigenteDesde": "2026-01-01",
+  "notas": "Convertida del Excel «Auditoría talleres». Escala 0/1/2 con N/A: 0 = No cumple, 1 = Cumple parcialmente, 2 = Cumple. Todas las preguntas pesan igual, como en el original.",
+  "pesosArea": {
+    "delegacion": 0.1064,
+    "administracion": 0.1064,
+    "taller": 0.1489,
+    "recambios": 0.1277,
+    "asesores": 0.1489,
+    "resp_taller": 0.1489,
+    "resp_centro": 0.2128
+  },
+  "areas": [
+    {
+      "codigo": "delegacion",
+      "nombre": "Toda la delegación",
+      "orden": 1,
+      "color": "#00838F",
+      "icono": "domain"
+    },
+    {
+      "codigo": "administracion",
+      "nombre": "Administración de taller",
+      "orden": 2,
+      "color": "#1E88E5",
+      "icono": "receipt_long"
+    },
+    {
+      "codigo": "taller",
+      "nombre": "Taller · Mecánicos",
+      "orden": 3,
+      "color": "#8E24AA",
+      "icono": "build"
+    },
+    {
+      "codigo": "recambios",
+      "nombre": "Recambios",
+      "orden": 4,
+      "color": "#FB8C00",
+      "icono": "inventory_2"
+    },
+    {
+      "codigo": "asesores",
+      "nombre": "Oficina de taller · Asesores",
+      "orden": 5,
+      "color": "#43A047",
+      "icono": "support_agent"
+    },
+    {
+      "codigo": "resp_taller",
+      "nombre": "Responsable de taller",
+      "orden": 6,
+      "color": "#5E35B1",
+      "icono": "engineering"
+    },
+    {
+      "codigo": "resp_centro",
+      "nombre": "Responsable de centro",
+      "orden": 7,
+      "color": "#C62828",
+      "icono": "insights"
+    }
+  ],
+  "preguntas": [
+    {
+      "id": "del_001_puntualidad_del_personal",
+      "areaCodigo": "delegacion",
+      "bloque": "Toda la delegación",
+      "orden": 1,
+      "texto": "Puntualidad del personal",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "del_002_limpieza_general_de_las_",
+      "areaCodigo": "delegacion",
+      "bloque": "Toda la delegación",
+      "orden": 2,
+      "texto": "Limpieza general de las instalaciones",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "del_003_orden_general_de_las_zon",
+      "areaCodigo": "delegacion",
+      "bloque": "Toda la delegación",
+      "orden": 3,
+      "texto": "Orden general de las zonas de trabajo",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "del_004_imagen_corporativa_unifo",
+      "areaCodigo": "delegacion",
+      "bloque": "Toda la delegación",
+      "orden": 4,
+      "texto": "Imagen corporativa (uniformes, EPIs)",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "del_005_estado_general_de_las_in",
+      "areaCodigo": "delegacion",
+      "bloque": "Toda la delegación",
+      "orden": 5,
+      "texto": "Estado general de las instalaciones",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "adm_001_facturas_de_flotas_y_m_p",
+      "areaCodigo": "administracion",
+      "bloque": "Administración de taller",
+      "orden": 1,
+      "texto": "Facturas de flotas y M+PRG revisadas correctamente (códigos de deducción)",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "adm_002_gestion_correcta_de_trel",
+      "areaCodigo": "administracion",
+      "bloque": "Administración de taller",
+      "orden": 2,
+      "texto": "Gestión correcta de Trello",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "adm_003_facturacion_realizada_en",
+      "areaCodigo": "administracion",
+      "bloque": "Administración de taller",
+      "orden": 3,
+      "texto": "Facturación realizada en plazo",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "adm_004_expedientes_completos_an",
+      "areaCodigo": "administracion",
+      "bloque": "Administración de taller",
+      "orden": 4,
+      "texto": "Expedientes completos antes de facturar",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "adm_005_no_existen_facturas_pend",
+      "areaCodigo": "administracion",
+      "bloque": "Administración de taller",
+      "orden": 5,
+      "texto": "No existen facturas pendientes sin justificar",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_001_informes_tecnicos_correc",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 1,
+      "texto": "Informes técnicos correctamente redactados",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_002_solicitud_de_recambios_m",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 2,
+      "texto": "Solicitud de recambios mediante Prepicking",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_003_orden_y_limpieza_del_car",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 3,
+      "texto": "Orden y limpieza del carro de herramientas",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_004_orden_y_limpieza_del_pue",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 4,
+      "texto": "Orden y limpieza del puesto de trabajo",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_005_uso_correcto_de_epis",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 5,
+      "texto": "Uso correcto de EPIs",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_006_horas_imputadas_correcta",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 6,
+      "texto": "Horas imputadas correctamente",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "tal_007_herramientas_especiales_",
+      "areaCodigo": "taller",
+      "bloque": "Taller · Mecánicos",
+      "orden": 7,
+      "texto": "Herramientas especiales correctamente almacenadas",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_001_orden_y_limpieza_del_alm",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 1,
+      "texto": "Orden y limpieza del almacén",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_002_utilizacion_correcta_del",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 2,
+      "texto": "Utilización correcta del Prepicking",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_003_inventario_actualizado",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 3,
+      "texto": "Inventario actualizado",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_004_material_correctamente_i",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 4,
+      "texto": "Material correctamente identificado y ubicado",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_005_sin_referencias_fuera_de",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 5,
+      "texto": "Sin referencias fuera de ubicación",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "rec_006_atencion_rapida_al_talle",
+      "areaCodigo": "recambios",
+      "bloque": "Recambios",
+      "orden": 6,
+      "texto": "Atención rápida al taller",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_001_orden_de_la_oficina",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 1,
+      "texto": "Orden de la oficina",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_002_gestion_diaria_de_leads",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 2,
+      "texto": "Gestión diaria de Leads",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_003_gestion_correcta_de_cita",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 3,
+      "texto": "Gestión correcta de citas",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_004_recepcion_del_vehiculo_s",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 4,
+      "texto": "Recepción del vehículo según proceso",
+      "ayuda": "Recepcion activa (estado daños y fotos) · Fundas",
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_005_entrega_del_vehiculo_cor",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 5,
+      "texto": "Entrega del vehículo correctamente realizada",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_006_presupuestos_pendientes_",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 6,
+      "texto": "Presupuestos pendientes controlados",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "ase_007_clientes_informados_del_",
+      "areaCodigo": "asesores",
+      "bloque": "Oficina de taller · Asesores",
+      "orden": 7,
+      "texto": "Clientes informados del estado de la reparación",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_001_organizacion_del_taller",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 1,
+      "texto": "Organización del taller",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_002_control_de_calidad_reali",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 2,
+      "texto": "Control de calidad realizado",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_003_pruebas_dinamicas_realiz",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 3,
+      "texto": "Pruebas dinámicas realizadas cuando corresponda",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_004_reunion_mensual_realizad",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 4,
+      "texto": "Reunión mensual realizada con el equipo",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_005_planificacion_de_carga_d",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 5,
+      "texto": "Planificación de carga del taller",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_006_seguimiento_de_vehiculos",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 6,
+      "texto": "Seguimiento de vehículos inmovilizados",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_007_seguimiento_de_productiv",
+      "areaCodigo": "resp_taller",
+      "bloque": "Responsable de taller",
+      "orden": 7,
+      "texto": "Seguimiento de productividad y eficiencia",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_001_seguimiento_de_kpis",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 1,
+      "texto": "Seguimiento de KPIs",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_002_seguimiento_del_plan_de_",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 2,
+      "texto": "Seguimiento del plan de acciones",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_003_reunion_de_resultados_co",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 3,
+      "texto": "Reunión de resultados con el equipo",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_004_estado_general_de_las_in",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 4,
+      "texto": "Estado general de las instalaciones",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_005_desarrollo_y_formacion_d",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 5,
+      "texto": "Desarrollo y formación del personal",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_006_mejora_continua_implanta",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 6,
+      "texto": "Mejora continua implantada",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_007_cumplimiento_de_objetivo",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 7,
+      "texto": "Cumplimiento de objetivos de postventa",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_008_pasar_al_responsable_pos",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 8,
+      "texto": "Pasar al Responsable postventa semanalmente estado WIP",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_009_pasar_al_responsable_pos",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 9,
+      "texto": "Pasar al responsable Postventa informe mensual hojas + 30 días",
+      "ayuda": null,
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    },
+    {
+      "id": "res_010_actualizacion_semanal_pi",
+      "areaCodigo": "resp_centro",
+      "bloque": "Responsable de centro",
+      "orden": 10,
+      "texto": "Actualización semanal pizarra/dashboard datos taller",
+      "ayuda": "ultima semana del mes, todos los dias (cultura cierre)",
+      "peso": 1,
+      "critica": false,
+      "permiteNA": true,
+      "fotoObligatoriaSi": [
+        "NO_CUMPLE"
+      ]
+    }
+  ]
+}

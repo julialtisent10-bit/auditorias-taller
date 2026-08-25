@@ -7,6 +7,8 @@ import 'package:audit_app/features/auditoria/domain/repositories/auditoria_repos
 import 'package:audit_app/features/auditoria/domain/usecases/calcular_puntuacion.dart';
 import 'package:audit_app/features/auditoria/presentation/pages/cuestionario_page.dart';
 import 'package:audit_app/features/auditoria/presentation/providers/auditoria_controller.dart';
+import 'package:audit_app/features/plantillas/domain/entities/plantilla.dart';
+import 'package:audit_app/shared/area_vista.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -103,6 +105,22 @@ const pesos = <String, double>{
   'taller': 0.30,
 };
 
+// Las áreas ya no están fijadas en el código: el test declara las suyas,
+// igual que haría una plantilla real.
+const areasPrueba = <AreaPlantilla>[
+  AreaPlantilla(
+      codigo: 'administracion',
+      nombre: 'Administración',
+      orden: 1,
+      colorHex: '#1E88E5'),
+  AreaPlantilla(
+      codigo: 'asesores', nombre: 'Asesores', orden: 2, colorHex: '#43A047'),
+  AreaPlantilla(
+      codigo: 'recambios', nombre: 'Recambios', orden: 3, colorHex: '#FB8C00'),
+  AreaPlantilla(
+      codigo: 'taller', nombre: 'Taller', orden: 4, colorHex: '#8E24AA'),
+];
+
 Widget montar(RepoFalso repo) {
   final estado = AuditoriaState.desde(
     auditoriaId: 'a1',
@@ -110,6 +128,7 @@ Widget montar(RepoFalso repo) {
     fecha: DateTime(2026, 8, 21),
     preguntas: preguntas,
     pesosArea: pesos,
+    areas: AreaVista.listaDesde(areasPrueba),
   );
 
   return ProviderScope(

@@ -18,7 +18,7 @@ class PlantillaRepository {
 
   final FirebaseFirestore _db;
 
-  static const assetPorDefecto = 'assets/plantillas/plantilla_taller_vi_v1.json';
+  static const assetPorDefecto = 'assets/plantillas/plantilla_postventa_v1.json';
 
   Plantilla? _cache;
 
@@ -97,17 +97,25 @@ class PlantillaRepository {
   /// Sube el asset a Firestore. Se usa una sola vez al montar el proyecto.
   Future<void> sembrarEnFirestore() async {
     final plantilla = await _desdeAsset();
-    final doc = _db.collection('plantillas').doc(plantilla.id);
+    final coleccion = _db.collection('plantillas');
+    final doc = coleccion.doc(plantilla.id);
+
+    // Archiva cualquier otra plantilla publicada. Sin esto convivirían dos y
+    // la app elegiría la de mayor número de versión, que no tiene por qué ser
+    // la que se acaba de subir.
+    final publicadas =
+        await coleccion.where('estado', isEqualTo: 'publicada').get();
+    for (final otra in publicadas.docs) {
+      if (otra.id == plantilla.id) continue;
+      await otra.reference.set({'estado': 'archivada'}, SetOptions(merge: true));
+    }
 
     await doc.set({
       'nombre': plantilla.nombre,
       'version': plantilla.version,
       'estado': 'publicada',
       'pesosArea': plantilla.pesosArea,
-      'areas': [
-        for (final a in plantilla.areas)
-          {'codigo': a.codigo, 'nombre': a.nombre, 'orden': a.orden, 'color': a.colorHex},
-      ],
+      'areas': [for (final a in plantilla.areas) a.toJson()],
     });
 
     // Lotes de 500: es el máximo por WriteBatch en Firestore.

@@ -6,6 +6,7 @@ class AreaPlantilla {
     required this.nombre,
     required this.orden,
     required this.colorHex,
+    this.iconoClave = 'checklist',
   });
 
   final String codigo;
@@ -13,12 +14,25 @@ class AreaPlantilla {
   final int orden;
   final String colorHex;
 
+  /// Clave simbólica del icono, no el icono en sí: el dominio no conoce
+  /// Flutter. La capa de presentación la traduce.
+  final String iconoClave;
+
   factory AreaPlantilla.fromJson(Map<String, dynamic> j) => AreaPlantilla(
         codigo: j['codigo'] as String,
         nombre: j['nombre'] as String,
         orden: (j['orden'] as num?)?.toInt() ?? 0,
         colorHex: j['color'] as String? ?? '#666666',
+        iconoClave: j['icono'] as String? ?? 'checklist',
       );
+
+  Map<String, dynamic> toJson() => {
+        'codigo': codigo,
+        'nombre': nombre,
+        'orden': orden,
+        'color': colorHex,
+        'icono': iconoClave,
+      };
 }
 
 /// Cuestionario versionado. Una auditoría guarda `plantillaId` + `version`

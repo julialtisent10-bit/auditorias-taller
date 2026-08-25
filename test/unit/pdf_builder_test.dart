@@ -6,6 +6,7 @@ import 'package:audit_app/features/auditoria/domain/entities/valor_respuesta.dar
 import 'package:audit_app/features/auditoria/domain/usecases/calcular_puntuacion.dart';
 import 'package:audit_app/features/reporte/data/pdf/pdf_builder.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pdf/pdf.dart' show PdfColor;
 import 'package:pdf/widgets.dart' as pw;
 
 /// En test no hay rootBundle: las fuentes se leen del disco directamente.
@@ -33,6 +34,16 @@ Respuesta _r(String id, String area, int peso, ValorRespuesta v,
       comentario: comentario,
     );
 
+/// Areas del cuestionario de prueba. Antes eran una constante de la
+/// aplicacion; ahora cada plantilla trae las suyas y el test declara las
+/// que necesita.
+const areasPrueba = <AreaInfo>[
+  AreaInfo('administracion', 'Administracion', PdfColor.fromInt(0xFF1E88E5)),
+  AreaInfo('asesores', 'Asesores', PdfColor.fromInt(0xFF43A047)),
+  AreaInfo('recambios', 'Recambios', PdfColor.fromInt(0xFFFB8C00)),
+  AreaInfo('taller', 'Taller', PdfColor.fromInt(0xFF8E24AA)),
+];
+
 DatosReporte _datos({String? logoSvg}) {
   final respuestas = [
     _r('a1', 'administracion', 3, ValorRespuesta.cumple),
@@ -47,6 +58,7 @@ DatosReporte _datos({String? logoSvg}) {
   ];
 
   return DatosReporte(
+    areas: areasPrueba,
     centroNombre: 'Centro de prueba',
     fecha: DateTime(2026, 8, 21),
     auditorNombre: 'Auditor de prueba',
@@ -95,6 +107,7 @@ void main() {
     ];
 
     final datos = DatosReporte(
+      areas: areasPrueba,
       centroNombre: 'Centro — prueba',
       fecha: DateTime(2026, 8, 21),
       auditorNombre: 'Auditor',
@@ -123,6 +136,7 @@ void main() {
       _r('t1', 'taller', 1, ValorRespuesta.cumple),
     ];
     final datos = DatosReporte(
+      areas: areasPrueba,
       centroNombre: 'Centro con area vacia',
       fecha: DateTime(2026, 8, 21),
       auditorNombre: 'Auditor',

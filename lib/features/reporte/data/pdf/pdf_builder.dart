@@ -15,11 +15,10 @@ class AreaInfo {
   final PdfColor color;
 }
 
-const areasInforme = <AreaInfo>[
-  AreaInfo('administracion', 'Administración', PdfColor.fromInt(0xFF1E88E5)),
-  AreaInfo('asesores', 'Asesores de Servicio', PdfColor.fromInt(0xFF43A047)),
-  AreaInfo('recambios', 'Recambios', PdfColor.fromInt(0xFFFB8C00)),
-  AreaInfo('taller', 'Taller', PdfColor.fromInt(0xFF8E24AA)),
+/// Fallback si una auditoría antigua no guardó sus áreas. Solo evita que el
+/// informe salga vacío; lo normal es que vengan en [DatosReporte.areas].
+const areasPorDefecto = <AreaInfo>[
+  AreaInfo('general', 'General', PdfColor.fromInt(0xFF546E7A)),
 ];
 
 /// Tipografía incrustada en el informe.
@@ -52,6 +51,7 @@ class DatosReporte {
     required this.responsables,
     required this.resultado,
     required this.respuestas,
+    required this.areas,
     this.imagenes = const {},
     this.logoSvg,
     this.fuentes,
@@ -63,6 +63,11 @@ class DatosReporte {
   final Map<String, String> responsables;
   final ResultadoAuditoria resultado;
   final List<Respuesta> respuestas;
+
+  /// Áreas del cuestionario, en orden. Vienen de la plantilla usada en esa
+  /// auditoría, no de una lista fija: el informe debe reflejar el
+  /// cuestionario que se pasó ese día.
+  final List<AreaInfo> areas;
 
   /// Bytes de las evidencias, indexados por id. Los aporta quien construye
   /// el informe leyéndolos del almacén local; el generador no sabe de dónde
@@ -154,8 +159,8 @@ class PdfBuilder {
             pw.Expanded(
               child: pw.Center(
                 child: RadarChart(
-                  ejes: areasInforme.map((a) => a.nombre).toList(),
-                  valores: areasInforme
+                  ejes: d.areas.map((a) => a.nombre).toList(),
+                  valores: d.areas
                       .map((a) => r.areas[a.codigo]?.porcentaje ?? 0)
                       .toList(),
                 ),
@@ -215,7 +220,7 @@ class PdfBuilder {
       },
       headers: const ['Área', 'Responsable', 'Puntos', 'N/A', 'Críticas', '%'],
       data: [
-        for (final a in areasInforme)
+        for (final a in d.areas)
           () {
             final r = d.resultado.areas[a.codigo];
             if (r == null) return [a.nombre, '-', '-', '-', '-', '-'];
@@ -235,7 +240,7 @@ class PdfBuilder {
   // ------------------------------------------------------ resumen ejecutivo
 
   pw.Widget _resumenEjecutivo(DatosReporte d) {
-    final areasOrdenadas = areasInforme
+    final areasOrdenadas = d.areas
         .where((a) => d.resultado.areas[a.codigo]?.evaluable ?? false)
         .toList()
       ..sort((x, y) => (d.resultado.areas[y.codigo]!.porcentaje)
@@ -314,7 +319,7 @@ class PdfBuilder {
       ),
     ];
 
-    for (final area in areasInforme) {
+    for (final area in d.areas) {
       final hallazgos = d.respuestas
           .where((r) => r.areaCodigo == area.codigo && (r.valor?.esHallazgo ?? false))
           .toList()

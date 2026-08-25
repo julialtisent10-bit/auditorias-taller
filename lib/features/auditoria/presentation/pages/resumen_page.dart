@@ -7,12 +7,14 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../app/di/providers.dart';
 import '../../../../core/almacen/almacen_binarios.dart';
+import '../../../../shared/area_vista.dart';
+import 'package:pdf/pdf.dart' show PdfColor;
+
 import '../../../reporte/data/pdf/pdf_builder.dart';
 import '../../domain/entities/respuesta.dart';
 import '../../domain/entities/valor_respuesta.dart';
 import '../../domain/usecases/calcular_puntuacion.dart';
 import '../providers/auditoria_controller.dart';
-import 'cuestionario_page.dart';
 
 /// Resultado antes de firmar: qué nota sale, dónde están los problemas y
 /// vista previa del informe.
@@ -38,7 +40,7 @@ class ResumenPage extends ConsumerWidget {
         children: [
           _Marcador(puntuacion: res.puntuacionGlobal, nivel: res.nivel),
           const SizedBox(height: 20),
-          for (final area in areasAuditoria)
+          for (final area in state.areas)
             if (res.areas[area.codigo] != null)
               _FilaArea(area: area, resultado: res.areas[area.codigo]!),
           if (res.totalCriticasFalladas > 0) ...[
@@ -147,6 +149,11 @@ Future<DatosReporte?> construirDatosReporte(WidgetRef ref) async {
     responsables: auditoria.responsables,
     resultado: state.resultado,
     respuestas: state.respuestas.values.toList(),
+    areas: [
+      for (final a in state.areas)
+        AreaInfo(a.codigo, a.nombre,
+            PdfColor.fromInt(a.color.toARGB32())),
+    ],
     imagenes: imagenes,
     logoSvg: logo,
     fuentes: fuentes,
@@ -188,7 +195,7 @@ class _Marcador extends StatelessWidget {
 
 class _FilaArea extends StatelessWidget {
   const _FilaArea({required this.area, required this.resultado});
-  final AreaTab area;
+  final AreaVista area;
   final ResultadoArea resultado;
 
   @override

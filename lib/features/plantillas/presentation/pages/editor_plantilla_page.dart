@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../auditoria/domain/entities/pregunta.dart';
-import '../../../auditoria/presentation/pages/cuestionario_page.dart';
+import '../../../../shared/area_vista.dart';
 import '../../data/repositories/plantilla_repository.dart';
 import '../../domain/entities/plantilla.dart';
 import 'editor_pregunta_page.dart';
@@ -213,9 +213,10 @@ class _ListadoState extends ConsumerState<_Listado> {
 
         final todas = snap.data!;
         final retiradas = todas.where((p) => !p.activa).length;
+        final areas = AreaVista.listaDesde(widget.plantilla.areas);
 
         return DefaultTabController(
-          length: areasAuditoria.length,
+          length: areas.length,
           child: Column(
             children: [
               _BarraHerramientas(
@@ -232,7 +233,7 @@ class _ListadoState extends ConsumerState<_Listado> {
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 tabs: [
-                  for (final a in areasAuditoria)
+                  for (final a in areas)
                     Tab(
                       icon: Icon(a.icono, size: 18),
                       child: Text(
@@ -246,7 +247,7 @@ class _ListadoState extends ConsumerState<_Listado> {
               Expanded(
                 child: TabBarView(
                   children: [
-                    for (final a in areasAuditoria)
+                    for (final a in areas)
                       _PreguntasDeArea(
                         plantillaId: widget.plantilla.id,
                         area: a,
@@ -409,7 +410,7 @@ class _PreguntasDeArea extends ConsumerWidget {
   });
 
   final String plantillaId;
-  final AreaTab area;
+  final AreaVista area;
   final List<PreguntaEditable> preguntas;
   final bool mostrarRetiradas;
   final Set<String> seleccion;

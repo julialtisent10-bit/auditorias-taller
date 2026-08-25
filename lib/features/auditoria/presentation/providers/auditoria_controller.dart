@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/area_vista.dart';
 import '../../domain/entities/evidencia.dart';
 import '../../domain/entities/pregunta.dart';
 import '../../domain/entities/respuesta.dart';
@@ -18,6 +19,7 @@ class AuditoriaState {
     required this.preguntas,
     required this.respuestas,
     required this.pesosArea,
+    required this.areas,
     required this.resultado,
     this.guardando = false,
   });
@@ -31,6 +33,7 @@ class AuditoriaState {
     required DateTime fecha,
     required List<Pregunta> preguntas,
     required Map<String, double> pesosArea,
+    required List<AreaVista> areas,
     List<Respuesta> respuestasPrevias = const [],
   }) {
     final respuestas = {for (final r in respuestasPrevias) r.preguntaId: r};
@@ -41,6 +44,7 @@ class AuditoriaState {
       preguntas: [...preguntas]..sort((a, b) => a.orden.compareTo(b.orden)),
       respuestas: respuestas,
       pesosArea: pesosArea,
+      areas: areas,
       resultado: const CalcularPuntuacion()(
         respuestas: respuestas.values.toList(),
         pesosArea: pesosArea,
@@ -58,6 +62,11 @@ class AuditoriaState {
   /// Indexado por preguntaId para acceso O(1) desde la UI.
   final Map<String, Respuesta> respuestas;
   final Map<String, double> pesosArea;
+
+  /// Áreas de esta auditoría, en orden. Vienen de la plantilla, no del
+  /// código: cada cuestionario puede traer las suyas.
+  final List<AreaVista> areas;
+
   final ResultadoAuditoria resultado;
   final bool guardando;
 
@@ -96,6 +105,7 @@ class AuditoriaState {
         preguntas: preguntas,
         respuestas: respuestas ?? this.respuestas,
         pesosArea: pesosArea,
+        areas: areas,
         resultado: resultado ?? this.resultado,
         guardando: guardando ?? this.guardando,
       );

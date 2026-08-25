@@ -2,23 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/pregunta.dart';
+import '../../../../shared/area_vista.dart';
 import '../providers/auditoria_controller.dart';
 import '../widgets/pregunta_card.dart';
-
-class AreaTab {
-  const AreaTab(this.codigo, this.nombre, this.icono, this.color);
-  final String codigo;
-  final String nombre;
-  final IconData icono;
-  final Color color;
-}
-
-const areasAuditoria = <AreaTab>[
-  AreaTab('administracion', 'Administración', Icons.receipt_long, Color(0xFF1E88E5)),
-  AreaTab('asesores', 'Asesores', Icons.support_agent, Color(0xFF43A047)),
-  AreaTab('recambios', 'Recambios', Icons.inventory_2, Color(0xFFFB8C00)),
-  AreaTab('taller', 'Taller', Icons.build, Color(0xFF8E24AA)),
-];
 
 class CuestionarioPage extends ConsumerStatefulWidget {
   const CuestionarioPage({super.key});
@@ -29,17 +15,25 @@ class CuestionarioPage extends ConsumerStatefulWidget {
 
 class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: areasAuditoria.length, vsync: this);
+  TabController? _tabs;
 
   @override
   void dispose() {
-    _tabs.dispose();
+    _tabs?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(auditoriaControllerProvider);
+    final areas = state.areas;
+
+    // El controlador se crea aquí y no en initState porque el número de
+    // pestañas sale de la plantilla, que no se conoce hasta tener el estado.
+    if (_tabs == null || _tabs!.length != areas.length) {
+      _tabs?.dispose();
+      _tabs = TabController(length: areas.length, vsync: this);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -68,11 +62,11 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: [
-            for (final area in areasAuditoria)
+            for (final area in areas)
               Tab(
                 icon: Icon(area.icono, size: 20),
                 child: _EtiquetaTab(
-                  nombre: area.nombre,
+                  nombre: area.nombreCorto,
                   progreso: state.resultado.areas[area.codigo]?.progreso ?? 0,
                 ),
               ),
@@ -82,7 +76,7 @@ class _CuestionarioPageState extends ConsumerState<CuestionarioPage>
       body: TabBarView(
         controller: _tabs,
         children: [
-          for (final area in areasAuditoria) _AreaView(area: area),
+          for (final area in areas) _AreaView(area: area),
         ],
       ),
       bottomNavigationBar: _BarraInferior(
@@ -120,7 +114,7 @@ class _EtiquetaTab extends StatelessWidget {
 
 class _AreaView extends ConsumerWidget {
   const _AreaView({required this.area});
-  final AreaTab area;
+  final AreaVista area;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -158,7 +152,7 @@ class _AreaView extends ConsumerWidget {
 
 class _CabeceraArea extends ConsumerWidget {
   const _CabeceraArea({required this.area});
-  final AreaTab area;
+  final AreaVista area;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

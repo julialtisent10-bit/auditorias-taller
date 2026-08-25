@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../auditoria/domain/entities/auditoria.dart';
-import '../../../auditoria/presentation/pages/cuestionario_page.dart';
+import '../../../../shared/area_vista.dart';
 
 /// Clasificación de centros por la puntuación de su última auditoría cerrada.
 class RankingPage extends ConsumerWidget {
@@ -33,11 +33,17 @@ class RankingPage extends ConsumerWidget {
               ),
             );
           }
+          // Las áreas salen de la plantilla vigente. Si todavía no ha
+          // cargado, se pintan las tarjetas sin el desglose por área.
+          final areas = ref.watch(plantillaProvider(null)).value?.areas ?? const [];
+          final vista = AreaVista.listaDesde(areas);
+
           return ListView.separated(
             padding: const EdgeInsets.all(12),
             itemCount: ranking.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) => _Tarjeta(posicion: i + 1, auditoria: ranking[i]),
+            itemBuilder: (_, i) =>
+                _Tarjeta(posicion: i + 1, auditoria: ranking[i], areas: vista),
           );
         },
       ),
@@ -46,10 +52,15 @@ class RankingPage extends ConsumerWidget {
 }
 
 class _Tarjeta extends StatelessWidget {
-  const _Tarjeta({required this.posicion, required this.auditoria});
+  const _Tarjeta({
+    required this.posicion,
+    required this.auditoria,
+    required this.areas,
+  });
 
   final int posicion;
   final Auditoria auditoria;
+  final List<AreaVista> areas;
 
   @override
   Widget build(BuildContext context) {
@@ -88,12 +99,12 @@ class _Tarjeta extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            if (areas.isNotEmpty) const SizedBox(height: 10),
             // Desglose por área: dos centros con la misma nota global pueden
             // tener problemas en sitios muy distintos.
             Row(
               children: [
-                for (final area in areasAuditoria)
+                for (final area in areas)
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
