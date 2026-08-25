@@ -22,13 +22,26 @@ class PlantillaRepository {
 
   Plantilla? _cache;
 
+  /// Carga el cuestionario vigente.
+  ///
+  /// La plantilla que trae la aplicación manda: su identificador es el del
+  /// cuestionario en vigor, y en Firestore solo vive la copia editable de ESA
+  /// plantilla. Si existe, gana (lleva las ediciones); si no, se usa la del
+  /// asset y el editor ofrece subirla.
+  ///
+  /// Antes esto buscaba «cualquier plantilla publicada» y se quedaba con la de
+  /// mayor versión. Al sustituir el cuestionario por otro distinto, la copia
+  /// del anterior seguía en Firestore y la aplicación seguía sirviéndola: el
+  /// cuestionario nuevo no aparecía por ninguna parte y no había forma de
+  /// llegar a él desde la interfaz.
   Future<Plantilla> cargar({String? plantillaId}) async {
-    if (_cache != null && (plantillaId == null || _cache!.id == plantillaId)) {
-      return _cache!;
-    }
+    final base = await _desdeAsset();
+    final id = plantillaId ?? base.id;
 
-    final remota = await _intentarRemota(plantillaId);
-    final plantilla = remota ?? await _desdeAsset();
+    if (_cache != null && _cache!.id == id) return _cache!;
+
+    final remota = await _intentarRemota(id);
+    final plantilla = remota ?? (id == base.id ? base : await _desdeAsset());
 
     final errores = plantilla.validar();
     if (errores.isNotEmpty) {
@@ -41,37 +54,18 @@ class PlantillaRepository {
     return plantilla;
   }
 
-  Future<Plantilla?> _intentarRemota(String? plantillaId) async {
+  /// La copia editable de [plantillaId] en Firestore, o null si aún no existe.
+  Future<Plantilla?> _intentarRemota(String plantillaId) async {
     try {
       final coleccion = _db.collection('plantillas');
-
-      String? id = plantillaId;
-      Map<String, dynamic>? datos;
-
-      if (id != null) {
-        final doc = await coleccion.doc(id).get();
-        datos = doc.data();
-      } else {
-        // Sin id concreto: la publicada de mayor versión. Es un `where` de
-        // igualdad sobre un solo campo, así que no necesita índice compuesto;
-        // la versión se elige en Dart por el mismo motivo.
-        final publicadas =
-            await coleccion.where('estado', isEqualTo: 'publicada').get();
-        if (publicadas.docs.isEmpty) return null;
-
-        final docs = publicadas.docs.toList()
-          ..sort((a, b) => ((b.data()['version'] as num?) ?? 0)
-              .compareTo((a.data()['version'] as num?) ?? 0));
-        id = docs.first.id;
-        datos = docs.first.data();
-      }
-
+      final doc = await coleccion.doc(plantillaId).get();
+      final datos = doc.data();
       if (datos == null) return null;
 
       // Las preguntas viven en una subcolección para no chocar con el
       // límite de 1 MiB por documento cuando la plantilla crece.
       final preguntas = await coleccion
-          .doc(id)
+          .doc(plantillaId)
           .collection('preguntas')
           .where('activa', isEqualTo: true)
           .get();
@@ -80,7 +74,7 @@ class PlantillaRepository {
 
       return Plantilla.fromJson({
         ...datos,
-        'id': id,
+        'id': plantillaId,
         'preguntas': preguntas.docs.map((d) => {...d.data(), 'id': d.id}).toList(),
       });
     } catch (_) {
