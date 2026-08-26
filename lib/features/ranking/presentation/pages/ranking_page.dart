@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/widgets/error_datos.dart';
 import '../../../auditoria/domain/entities/auditoria.dart';
 import '../../../../shared/area_vista.dart';
 
@@ -26,7 +27,7 @@ class RankingPage extends ConsumerWidget {
       ),
       body: historico.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('No se pudo cargar el histórico:\n$e')),
+        error: (e, _) => ErrorDatos(error: e, queSeIntentaba: 'el ranking'),
         data: (_) {
           if (ranking.isEmpty) {
             return const Center(

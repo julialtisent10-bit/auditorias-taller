@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/widgets/error_datos.dart';
 import '../../../../shared/area_vista.dart';
 import '../../../centros/domain/entities/centro.dart';
 import '../../../plantillas/domain/entities/plantilla.dart';
@@ -82,7 +83,7 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
       appBar: AppBar(title: const Text('Nueva auditoría')),
       body: centros.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('No se pudieron cargar los centros:\n$e')),
+        error: (e, _) => ErrorDatos(error: e, queSeIntentaba: 'los centros'),
         data: (lista) => ListView(
           padding: const EdgeInsets.all(16),
           children: [

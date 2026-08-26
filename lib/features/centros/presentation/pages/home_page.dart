@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/widgets/error_datos.dart';
 import '../../../../shared/widgets/aviso_almacenamiento.dart';
 import '../../../auditoria/presentation/borrar_auditoria.dart';
 import '../../domain/entities/centro.dart';
@@ -66,7 +67,7 @@ class HomePage extends ConsumerWidget {
       ),
       body: centros.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error cargando centros:\n$e')),
+        error: (e, _) => ErrorDatos(error: e, queSeIntentaba: 'los centros'),
         data: (lista) {
           if (lista.isEmpty) {
             return const Center(
