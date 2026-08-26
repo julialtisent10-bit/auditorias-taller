@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../../shared/widgets/aviso_almacenamiento.dart';
+import '../../../auditoria/presentation/borrar_auditoria.dart';
 import '../../domain/entities/centro.dart';
 import 'ficha_centro_page.dart';
 
@@ -119,12 +120,29 @@ class _AvisoEnCurso extends ConsumerWidget {
               title: Text('Auditoría sin terminar · ${a.centroNombre}'),
               subtitle: Text('Iniciada el ${_fecha(a.fecha)}',
                   style: const TextStyle(fontSize: 12)),
-              trailing: const Icon(Icons.arrow_forward),
               onTap: () async {
                 final navegador = Navigator.of(context);
                 await reanudarAuditoria(ref, a);
                 navegador.pushNamed('/auditoria');
               },
+              trailing: PopupMenuButton<String>(
+                tooltip: 'Opciones',
+                onSelected: (opcion) async {
+                  if (opcion == 'continuar') {
+                    final navegador = Navigator.of(context);
+                    await reanudarAuditoria(ref, a);
+                    navegador.pushNamed('/auditoria');
+                  } else if (opcion == 'descartar') {
+                    await confirmarYBorrarAuditoria(context, ref, a);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                      value: 'continuar', child: Text('Continuar auditoría')),
+                  PopupMenuItem(
+                      value: 'descartar', child: Text('Descartar auditoría')),
+                ],
+              ),
             ),
           ),
       ],

@@ -6,9 +6,8 @@ import '../../../../app/di/providers.dart';
 import '../../../../core/almacen/almacen_binarios.dart';
 import '../../../../core/descarga_web.dart';
 import '../../../reporte/data/exportador_excel.dart';
-import '../../../centros/data/repositories/centro_repository.dart';
 import '../../domain/entities/auditoria.dart';
-import '../../domain/repositories/auditoria_repository.dart';
+import '../borrar_auditoria.dart';
 
 /// Todas las auditorías, abiertas y cerradas.
 ///
@@ -127,7 +126,7 @@ class _Fila extends ConsumerWidget {
             } else if (opcion == 'excel') {
               await _exportar(context, ref);
             } else if (opcion == 'borrar') {
-              await _borrar(context, ref);
+              await confirmarYBorrarAuditoria(context, ref, auditoria);
             }
           },
           itemBuilder: (_) => [
@@ -193,65 +192,6 @@ class _Fila extends ConsumerWidget {
     } catch (e) {
       mensajero.showSnackBar(SnackBar(content: Text('No se pudo exportar: $e')));
     }
-  }
-
-  Future<void> _borrar(BuildContext context, WidgetRef ref) async {
-    // Todo lo que dependa del widget se captura ANTES de los await. Al
-    // borrar, el stream reemite, la lista se reconstruye sin esta fila y su
-    // elemento queda descartado: usar `context` o `ref` después de ese punto
-    // lanza, y el catch lo mostraba como «no se pudo borrar» cuando en
-    // realidad sí se había borrado.
-    final mensajero = ScaffoldMessenger.of(context);
-    final auditorias = ref.read(auditoriaRepositoryProvider);
-    final centros = ref.read(centroRepositoryProvider);
-
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Borrar la auditoría'),
-        content: Text(
-          'Se eliminarán sus respuestas, sus fotos y su informe de forma '
-          'permanente.\n\n${auditoria.centroNombre} · ${_fecha(auditoria.fecha)}',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Borrar')),
-        ],
-      ),
-    );
-    if (confirmado != true) return;
-
-    try {
-      await auditorias.eliminar(auditoria.id);
-      await _recalcularCentro(auditorias, centros);
-      mensajero.showSnackBar(const SnackBar(content: Text('Auditoría borrada.')));
-    } catch (e) {
-      mensajero.showSnackBar(SnackBar(content: Text('No se pudo borrar: $e')));
-    }
-  }
-
-  /// La ficha del centro guarda la última puntuación para pintar la tendencia
-  /// sin releer el histórico. Al borrar una auditoría ese dato puede quedar
-  /// apuntando a algo que ya no existe, así que se rehace con lo que queda.
-  Future<void> _recalcularCentro(
-      AuditoriaRepository repo, CentroRepository centros) async {
-    final cerradas =
-        await repo.historico(centroId: auditoria.centroId, limite: 50).first;
-
-    if (cerradas.isEmpty) {
-      await centros.limpiarResumen(auditoria.centroId);
-      return;
-    }
-    await centros.registrarCierre(
-      auditoria.centroId,
-      auditoriaId: cerradas.first.id,
-      fecha: cerradas.first.fecha,
-      puntuacion: cerradas.first.puntuacionGlobal,
-    );
   }
 
   static String _fecha(DateTime d) {
