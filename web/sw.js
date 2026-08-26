@@ -27,11 +27,22 @@ const ESENCIALES = [
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
-    caches.open(ALMACEN).then((almacen) =>
+    caches.open(ALMACEN).then(async (almacen) => {
       // Con `reload` se evita que el propio navegador sirva una copia vieja
       // de su caché HTTP al rellenar la nuestra.
-      almacen.addAll(ESENCIALES.map((u) => new Request(u, { cache: 'reload' })))
-    )
+      //
+      // Si alguno de los imprescindibles falla al guardarse, esta versión
+      // quedaría a medio instalar: capaz de activarse pero incapaz de
+      // arrancar. Se comprueba explícitamente y, si falta algo, se aborta la
+      // instalación entera para que el usuario se quede en la versión
+      // anterior —que sí funciona— en vez de heredar una rota.
+      await almacen.addAll(ESENCIALES.map((u) => new Request(u, { cache: 'reload' })));
+      const guardados = await Promise.all(ESENCIALES.map((u) => almacen.match(u)));
+      if (guardados.some((r) => !r)) {
+        await caches.delete(ALMACEN);
+        throw new Error('No se pudieron guardar todos los ficheros imprescindibles');
+      }
+    })
   );
   // No se llama a skipWaiting aquí a propósito: la versión nueva espera a que
   // el usuario acepte, para no cambiarle la aplicación bajo los pies en mitad

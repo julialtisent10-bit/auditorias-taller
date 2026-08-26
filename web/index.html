@@ -47,7 +47,7 @@
       left: 50%;
       bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
       transform: translateX(-50%);
-      z-index: 9998;
+      z-index: 10000;   /* por encima de #arranque */
       display: flex; align-items: center; gap: 12px;
       padding: 10px 12px 10px 16px;
       border-radius: 999px;
@@ -150,12 +150,44 @@
       document.body.appendChild(aviso);
     }
 
+    var arranqueOk = false;
     window.addEventListener('flutter-first-frame', function () {
+      arranqueOk = true;
       var pantalla = document.getElementById('arranque');
       if (!pantalla) return;
       pantalla.classList.add('oculto');
       setTimeout(function () { pantalla.remove(); }, 350);
     });
+
+    setTimeout(function () {
+      if (arranqueOk) return;
+      var texto = document.querySelector('#arranque p');
+      if (!texto) return;
+      texto.innerHTML =
+        'Está tardando más de lo normal.<br>' +
+        '<button type="button" id="btn-recuperar" style="' +
+        'margin-top:12px;border:0;border-radius:999px;padding:8px 16px;' +
+        'background:#fff;color:#0E4F8B;font:inherit;font-weight:600;' +
+        'cursor:pointer;">Volver a cargar</button>';
+      document.getElementById('btn-recuperar').addEventListener('click', function () {
+        this.disabled = true;
+        this.textContent = 'Recargando…';
+        // Recuperacion real: se borra todo lo guardado (cache y service
+        // worker) y se recarga desde cero. Un simple reload no basta si lo
+        // que esta roto es precisamente lo que hay guardado.
+        Promise.all([
+          'caches' in window ? caches.keys().then(function (n) {
+            return Promise.all(n.map(function (k) { return caches.delete(k); }));
+          }) : Promise.resolve(),
+          'serviceWorker' in navigator ? navigator.serviceWorker.getRegistrations()
+            .then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }) : Promise.resolve(),
+        ]).finally(function () {
+          window.location.reload();
+        });
+      });
+    }, 6000);
   </script>
 
   <script src="flutter_bootstrap.js" async></script>
