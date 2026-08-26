@@ -1,8 +1,8 @@
 # Auditorías de taller — vehículo industrial
 
-Aplicación web instalable (PWA) para auditar los centros del grupo en 4 áreas
-—Administración, Asesores de Servicio, Recambios y Taller— con trabajo sin
-cobertura, evidencia fotográfica e informe PDF firmado.
+Aplicación web instalable (PWA) para auditar los centros del grupo con el
+cuestionario mensual de postventa: 47 preguntas repartidas en 7 áreas, trabajo
+sin cobertura, evidencia fotográfica e informe PDF firmado.
 
 **En producción:** https://julialtisent10-bit.github.io/auditorias-taller/
 
@@ -48,34 +48,69 @@ El `--base-href` del flujo es imprescindible: Pages sirve el repo bajo
 `/auditorias-taller/`, no en la raíz, y sin ese ajuste la app pide sus propios
 ficheros en rutas que no existen y se queda en blanco.
 
-## 4. Cómo puntúa
+## 4. Si un despliegue rompe la app
+
+Esto se puede arreglar sin ayuda y en dos minutos. **La app siempre se puede
+devolver a la última versión que funcionaba.**
+
+### Primero, desde el móvil
+
+Abre la app y espera seis segundos. Si no arranca, la pantalla de carga
+ofrece **«Volver a cargar»**: ese botón borra lo guardado en el navegador y
+empieza de cero. Resuelve la mayoría de los casos, porque casi siempre lo
+roto es la copia local, no lo publicado.
+
+### Si eso no basta, volver a la versión anterior
+
+1. Abre https://github.com/julialtisent10-bit/auditorias-taller/actions
+2. Busca en la lista la **última ejecución con el círculo verde** anterior a
+   la que rompió las cosas (la fecha te dice cuál)
+3. Ábrela y pulsa **«Re-run all jobs»**, arriba a la derecha
+4. Espera dos minutos y vuelve a abrir la app
+
+Eso vuelve a publicar el código de ese día tal cual estaba. No se pierde
+nada: los datos viven en Firestore, no en la aplicación, así que las
+auditorías siguen donde estaban.
+
+> Cada despliegue publica una versión completa y coherente, nunca media. Por
+> eso volver atrás es seguro: se sustituye el conjunto entero.
+
+## 5. Cómo puntúa
 
 ```
 % Área  = Σ(peso × factor) / Σ(peso) × 100     [solo respuestas ≠ N/A]
 Global  = Σ(pesoÁrea × %Área) / Σ(pesoÁrea)    [solo áreas evaluables]
 ```
 
-| Respuesta | Factor |
-|---|---|
-| Cumple | 1.0 |
-| Cumple parcialmente | 0.5 |
-| No cumple | 0.0 |
-| No aplica | se excluye del cálculo |
+| Respuesta | En el Excel | Factor |
+|---|---|---|
+| Cumple | 2 | 1.0 |
+| Cumple parcialmente | 1 | 0.5 |
+| No cumple | 0 | 0.0 |
+| No aplica | N/A | se excluye del cálculo |
 
-**Pesos de pregunta:** 3 = crítica · 2 = importante · 1 = normal.
+**Pesos de área.** Se calculan solos, proporcionales a cuántas preguntas tiene
+cada área, de modo que **todas las preguntas valen lo mismo** aunque se añadan
+o se retiren desde el editor. Con pesos fijos, retirar tres preguntas de un
+área no cambiaba su peso y las que quedaban pasaban a valer más que las de
+otra área sin que nada lo advirtiera. Se pueden fijar a mano poniendo
+`pesosAutomaticos: false` en la plantilla.
 
-**Pesos de área:** Administración 20 % · Asesores 30 % · Recambios 20 % ·
-Taller 30 %. Se editan en `assets/plantillas/plantilla_taller_vi_v1.json`;
-deben sumar 1.0 y la app se niega a cargar una plantilla donde no sumen.
+**Preguntas eliminatorias.** Una pregunta marcada `critica: true` respondida
+*No cumple* topa su área al **79 %**. El cuestionario actual no usa ninguna,
+porque el Excel original no distingue importancia entre preguntas. Se activa
+por pregunta desde *Editar cuestionario*.
 
-**Regla de crítica:** una pregunta marcada `critica: true` respondida
-*No cumple* topa su área al **79 %**. Sin esta regla un fallo de EPIs queda
-diluido entre 30 preguntas correctas. Se desactiva con
-`CalcularPuntuacion(aplicarTopeCritica: false)`.
+**La foto nunca es obligatoria.** En un taller hay cosas que no se pueden
+fotografiar, y quedarse sin poder cerrar la auditoría por eso no tiene
+sentido. La cámara está para cuando la evidencia aporte.
 
 **Niveles:** A ≥ 90 · B ≥ 80 · C ≥ 65 · D < 65.
 
-## 5. Dónde vive cada cosa
+El cuestionario vive en `assets/plantillas/plantilla_postventa_v1.json`, y una
+vez subido a Firestore se edita desde la propia aplicación sin recompilar.
+
+## 6. Dónde vive cada cosa
 
 | Qué | Dónde | Nota |
 |---|---|---|
@@ -98,7 +133,7 @@ Si algún día se contrata el plan Blaze, recuperar la subida a la nube consiste
 en reintroducir una cola de salida: el almacén local (`AlmacenBinarios`) ya
 está aislado tras su propia interfaz.
 
-## 6. Estructura
+## 7. Estructura
 
 ```
 lib/
@@ -117,7 +152,7 @@ Cada feature sigue `data / domain / presentation`. La regla que lo sostiene:
 **`domain/` no importa Flutter, ni Firebase, ni `dart:io`**. Por eso
 `calcular_puntuacion.dart` se testea en milisegundos y sin navegador.
 
-## 7. Tipografía del informe
+## 8. Tipografía del informe
 
 `assets/fonts/NotoSans-*.ttf` se incrusta en el PDF. Las fuentes internas del
 formato PDF usan codificación WinAnsi y **descartan en silencio** cualquier
@@ -129,14 +164,14 @@ ningún aviso.
 Noto Sans está bajo SIL Open Font License; el texto va en `assets/fonts/OFL.txt`
 y debe distribuirse con la aplicación.
 
-## 8. Logotipo
+## 9. Logotipo
 
 `assets/branding/scaitt_logo.svg` se tomó del sitio corporativo y se recoloreó
 para que se vea sobre fondo blanco. Es una marca de la empresa: úsalo solo para
 documentación interna y sustitúyelo por el fichero oficial de marketing si el
 informe va a salir fuera.
 
-## 9. Estado de verificación
+## 10. Estado de verificación
 
 Comprobado con Flutter 3.47.1 / Dart 3.13.1:
 
@@ -144,6 +179,9 @@ Comprobado con Flutter 3.47.1 / Dart 3.13.1:
 - `flutter test` · 14 de 14 pruebas correctas
 - `flutter build web --release` · compila
 
-**No verificado todavía:** el flujo completo contra el Firebase real. La
-cámara, la firma manuscrita y el guardado en Firestore están escritos pero sin
-probar con un usuario autenticado en un dispositivo real.
+**Verificado en uso real:** acceso, alta de centros y lectura de datos contra
+el Firebase de producción.
+
+**No verificado todavía:** la cámara, la firma manuscrita y la generación del
+PDF en un iPhone. El service worker tampoco se puede comprobar desde un
+entorno de desarrollo: hay que probarlo en el dispositivo.
