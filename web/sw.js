@@ -68,12 +68,22 @@ self.addEventListener('fetch', (evento) => {
   // respuestas rompería la sesión y los datos.
   if (url.origin !== self.location.origin) return;
 
-  // Navegación: se intenta la red para coger lo último, y si no hay se
-  // devuelve el index guardado. Sin esto, abrir la app sin señal daría el
-  // error de dinosaurio del navegador.
+  // Navegación: también desde lo guardado, igual que el resto.
+  //
+  // Antes iba a la red primero, y ahí estaba el fallo: tras un despliegue se
+  // servía el index.html NUEVO mientras los ficheros que este pide seguían
+  // saliendo de la caché VIEJA. La aplicación arrancaba con el HTML de una
+  // versión y el código de otra, no encajaban, y la pantalla se quedaba en
+  // gris sin ningún error visible.
+  //
+  // Sirviendo también la navegación desde la caché, el usuario se queda con
+  // una versión entera y coherente hasta que acepta el aviso de actualizar,
+  // que es cuando se cambian todos los ficheros a la vez.
   if (peticion.mode === 'navigate') {
     evento.respondWith(
-      fetch(peticion).catch(() => caches.match('index.html', { ignoreSearch: true }))
+      caches.match('index.html', { ignoreSearch: true }).then(
+        (guardado) => guardado || fetch(peticion)
+      )
     );
     return;
   }
