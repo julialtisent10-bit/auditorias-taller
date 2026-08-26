@@ -50,16 +50,12 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
 
     final valor = respuesta?.valor;
     final evidencias = respuesta?.evidencias ?? const <Evidencia>[];
-    final faltaFoto = widget.pregunta.exigeFoto(valor) && evidencias.isEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: faltaFoto ? Colors.redAccent : Colors.black12,
-          width: faltaFoto ? 1.4 : 1,
-        ),
+        side: const BorderSide(color: Colors.black12),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
@@ -104,7 +100,6 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
                 const Spacer(),
                 _BotonEvidencia(
                   habilitado: evidencias.length < Respuesta.maxEvidencias,
-                  destacado: faltaFoto,
                   onElegir: (desdeCamara) =>
                       controller.anadirEvidencia(widget.pregunta, desdeCamara: desdeCamara),
                 ),
@@ -133,12 +128,6 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
               _TiraEvidencias(
                 evidencias: evidencias,
                 onEliminar: (e) => controller.quitarEvidencia(widget.pregunta, e),
-              ),
-            if (faltaFoto)
-              const Padding(
-                padding: EdgeInsets.only(top: 4, bottom: 4),
-                child: Text('Esta respuesta requiere evidencia fotográfica',
-                    style: TextStyle(color: Colors.redAccent, fontSize: 12)),
               ),
           ],
         ),
@@ -231,14 +220,9 @@ class _ChipPeso extends StatelessWidget {
 }
 
 class _BotonEvidencia extends StatelessWidget {
-  const _BotonEvidencia({
-    required this.habilitado,
-    required this.destacado,
-    required this.onElegir,
-  });
+  const _BotonEvidencia({required this.habilitado, required this.onElegir});
 
   final bool habilitado;
-  final bool destacado;
 
   /// true = cámara, false = galería.
   final ValueChanged<bool> onElegir;
@@ -258,11 +242,9 @@ class _BotonEvidencia extends StatelessWidget {
         child: Icon(
           Icons.add_a_photo_outlined,
           size: 22,
-          color: !habilitado
-              ? Colors.grey.shade400
-              : destacado
-                  ? Colors.redAccent
-                  : Theme.of(context).colorScheme.primary,
+          color: habilitado
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey.shade400,
         ),
       ),
     );

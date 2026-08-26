@@ -76,9 +76,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "del_002_limpieza_general_de_las_",
@@ -90,9 +88,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "del_003_orden_general_de_las_zon",
@@ -104,9 +100,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "del_004_imagen_corporativa_unifo",
@@ -118,9 +112,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "del_005_estado_general_de_las_in",
@@ -132,9 +124,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "adm_001_facturas_de_flotas_y_m_p",
@@ -146,9 +136,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "adm_002_gestion_correcta_de_trel",
@@ -160,9 +148,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "adm_003_facturacion_realizada_en",
@@ -174,9 +160,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "adm_004_expedientes_completos_an",
@@ -188,9 +172,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "adm_005_no_existen_facturas_pend",
@@ -202,9 +184,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_001_informes_tecnicos_correc",
@@ -216,9 +196,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_002_solicitud_de_recambios_m",
@@ -230,9 +208,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_003_orden_y_limpieza_del_car",
@@ -244,9 +220,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_004_orden_y_limpieza_del_pue",
@@ -258,9 +232,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_005_uso_correcto_de_epis",
@@ -272,9 +244,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_006_horas_imputadas_correcta",
@@ -286,9 +256,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "tal_007_herramientas_especiales_",
@@ -300,9 +268,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_001_orden_y_limpieza_del_alm",
@@ -314,9 +280,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_002_utilizacion_correcta_del",
@@ -328,9 +292,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_003_inventario_actualizado",
@@ -342,9 +304,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_004_material_correctamente_i",
@@ -356,9 +316,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_005_sin_referencias_fuera_de",
@@ -370,9 +328,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "rec_006_atencion_rapida_al_talle",
@@ -384,9 +340,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_001_orden_de_la_oficina",
@@ -398,9 +352,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_002_gestion_diaria_de_leads",
@@ -412,9 +364,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_003_gestion_correcta_de_cita",
@@ -426,9 +376,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_004_recepcion_del_vehiculo_s",
@@ -440,9 +388,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_005_entrega_del_vehiculo_cor",
@@ -454,9 +400,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_006_presupuestos_pendientes_",
@@ -468,9 +412,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "ase_007_clientes_informados_del_",
@@ -482,9 +424,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_001_organizacion_del_taller",
@@ -496,9 +436,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_002_control_de_calidad_reali",
@@ -510,9 +448,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_003_pruebas_dinamicas_realiz",
@@ -524,9 +460,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_004_reunion_mensual_realizad",
@@ -538,9 +472,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_005_planificacion_de_carga_d",
@@ -552,9 +484,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_006_seguimiento_de_vehiculos",
@@ -566,9 +496,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_007_seguimiento_de_productiv",
@@ -580,9 +508,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_001_seguimiento_de_kpis",
@@ -594,9 +520,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_002_seguimiento_del_plan_de_",
@@ -608,9 +532,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_003_reunion_de_resultados_co",
@@ -622,9 +544,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_004_estado_general_de_las_in",
@@ -636,9 +556,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_005_desarrollo_y_formacion_d",
@@ -650,9 +568,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_006_mejora_continua_implanta",
@@ -664,9 +580,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_007_cumplimiento_de_objetivo",
@@ -678,9 +592,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_008_pasar_al_responsable_pos",
@@ -692,9 +604,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_009_pasar_al_responsable_pos",
@@ -706,9 +616,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     },
     {
       "id": "res_010_actualizacion_semanal_pi",
@@ -720,9 +628,7 @@
       "peso": 1,
       "critica": false,
       "permiteNA": true,
-      "fotoObligatoriaSi": [
-        "NO_CUMPLE"
-      ]
+      "fotoObligatoriaSi": []
     }
   ],
   "pesosAutomaticos": true

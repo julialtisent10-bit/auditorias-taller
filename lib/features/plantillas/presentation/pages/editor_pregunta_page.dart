@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
 import '../../../auditoria/domain/entities/pregunta.dart';
-import '../../../auditoria/domain/entities/valor_respuesta.dart';
 
 /// Formulario de una pregunta del cuestionario.
 class EditorPreguntaPage extends ConsumerStatefulWidget {
@@ -35,7 +34,6 @@ class _EditorPreguntaPageState extends ConsumerState<EditorPreguntaPage> {
   late int _peso = widget.pregunta.peso;
   late bool _critica = widget.pregunta.critica;
   late bool _permiteNA = widget.pregunta.permiteNA;
-  late Set<ValorRespuesta> _exigeFoto = widget.pregunta.fotoObligatoriaSi.toSet();
 
   bool _guardando = false;
 
@@ -143,33 +141,6 @@ class _EditorPreguntaPageState extends ConsumerState<EditorPreguntaPage> {
               style: TextStyle(fontSize: 12),
             ),
           ),
-          const SizedBox(height: 16),
-          const _Titulo('Exigir foto cuando la respuesta sea'),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final v in [ValorRespuesta.noCumple, ValorRespuesta.parcial])
-                FilterChip(
-                  label: Text(v.etiqueta),
-                  selected: _exigeFoto.contains(v),
-                  onSelected: (sel) => setState(() {
-                    if (sel) {
-                      _exigeFoto = {..._exigeFoto, v};
-                    } else {
-                      _exigeFoto = {..._exigeFoto}..remove(v);
-                    }
-                  }),
-                ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.only(top: 6),
-            child: Text(
-              'Sin foto, la auditoría no deja finalizar esa pregunta.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -206,7 +177,6 @@ class _EditorPreguntaPageState extends ConsumerState<EditorPreguntaPage> {
         peso: _peso,
         critica: _critica,
         permiteNA: _permiteNA,
-        fotoObligatoriaSi: _exigeFoto.toList(),
       );
 
       await ref

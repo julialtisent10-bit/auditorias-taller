@@ -661,8 +661,6 @@ class _FilaPregunta extends ConsumerWidget {
               _Etiqueta('peso ${pregunta.peso}'),
               if (pregunta.critica) const _Etiqueta('CRÍTICA', alerta: true),
               if (pregunta.permiteNA) const _Etiqueta('admite N/A'),
-              if (pregunta.fotoObligatoriaSi.isNotEmpty)
-                const _Etiqueta('exige foto'),
             ],
           ),
         ),

@@ -85,13 +85,12 @@ class AuditoriaState {
 
   Respuesta? respuestaDe(String preguntaId) => respuestas[preguntaId];
 
-  /// Preguntas que exigen foto segun su valor y aun no la tienen.
-  List<Pregunta> get evidenciasPendientes => preguntas.where((p) {
-        final r = respuestas[p.id];
-        return p.exigeFoto(r?.valor) && (r?.evidencias.isEmpty ?? true);
-      }).toList();
-
-  bool get puedeFinalizar => resultado.completa && evidenciasPendientes.isEmpty;
+  /// La foto nunca es obligatoria: es una ayuda, no un requisito.
+  ///
+  /// Antes había preguntas que no dejaban cerrar la auditoría sin adjuntar
+  /// imagen. En un taller eso significaba quedarse atascado por un detalle
+  /// que a veces no se puede fotografiar, así que se cierra con lo que haya.
+  bool get puedeFinalizar => resultado.completa;
 
   AuditoriaState copyWith({
     Map<String, Respuesta>? respuestas,

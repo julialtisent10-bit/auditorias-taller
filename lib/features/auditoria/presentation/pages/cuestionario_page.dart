@@ -285,11 +285,7 @@ class _BarraInferior extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(auditoriaControllerProvider);
     final res = state.resultado;
-    final pendientes = state.evidenciasPendientes.length;
-
-    final subtitulo = pendientes > 0
-        ? '$pendientes foto(s) obligatoria(s) pendiente(s)'
-        : '${(res.progresoGlobal * 100).round()}% completado';
+    final subtitulo = '${(res.progresoGlobal * 100).round()} % completado';
 
     return SafeArea(
       child: Padding(
@@ -302,11 +298,8 @@ class _BarraInferior extends ConsumerWidget {
               children: [
                 Text('Global ${res.puntuacionGlobal.toStringAsFixed(1)}%  ·  Nivel ${res.nivel}',
                     style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                  subtitulo,
-                  style: TextStyle(
-                      fontSize: 12, color: pendientes > 0 ? Colors.redAccent : Colors.grey),
-                ),
+                Text(subtitulo,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
             const Spacer(),
