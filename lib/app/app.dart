@@ -9,6 +9,9 @@ import '../features/auditoria/presentation/pages/resumen_page.dart';
 import '../features/centros/presentation/pages/home_page.dart';
 import '../features/plantillas/presentation/pages/editor_plantilla_page.dart';
 import '../features/ranking/presentation/pages/ranking_page.dart';
+import '../features/seguridad/presentation/pages/historico_seguridad_page.dart';
+import '../features/seguridad/presentation/pages/inicio_revision_page.dart';
+import '../features/seguridad/presentation/pages/revision_page.dart';
 import 'di/providers.dart';
 import 'theme/app_theme.dart';
 import 'login_page.dart';
@@ -40,6 +43,9 @@ class AuditApp extends ConsumerWidget {
         '/ranking': (_) => const RankingPage(),
         '/historico': (_) => const HistoricoPage(),
         '/cuestionario/editar': (_) => const EditorPlantillaPage(),
+        '/seguridad/inicio': (_) => const InicioRevisionPage(),
+        '/seguridad/revision': (_) => const RevisionPage(),
+        '/seguridad/historico': (_) => const HistoricoSeguridadPage(),
       },
     );
   }
