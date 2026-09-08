@@ -13,7 +13,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../auditoria/domain/entities/respuesta.dart';
 import '../../../auditoria/domain/entities/valor_respuesta.dart';
 import '../../../auditoria/domain/usecases/calcular_puntuacion.dart';
-import 'radar_chart.dart';
+import 'donut_puntuacion.dart';
 
 class AreaInfo {
   const AreaInfo(this.codigo, this.nombre, this.color);
@@ -162,22 +162,16 @@ class PdfBuilder {
           ],
         ),
         pw.Divider(thickness: 1.2),
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 10),
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             _marcadorGlobal(r),
-            pw.SizedBox(width: 12),
-            pw.Expanded(
-              child: pw.Center(
-                child: RadarChart(
-                  ejes: d.areas.map((a) => a.nombre).toList(),
-                  valores: d.areas
-                      .map((a) => r.areas[a.codigo]?.porcentaje ?? 0)
-                      .toList(),
-                ),
-              ),
-            ),
+            pw.SizedBox(width: 20),
+            // Las áreas van en barras y no en un gráfico de araña: con siete
+            // ejes la araña salía apretada y no dejaba comparar dos áreas
+            // parecidas, que es justo lo que se quiere mirar.
+            pw.Expanded(child: _barrasAreas(d)),
           ],
         ),
       ],
@@ -186,30 +180,108 @@ class PdfBuilder {
 
   pw.Widget _marcadorGlobal(ResultadoAuditoria r) {
     final color = _colorNota(r.puntuacionGlobal);
-    return pw.Container(
-      width: 150,
-      padding: const pw.EdgeInsets.all(14),
-      decoration: pw.BoxDecoration(
-        color: PdfColor(color.red, color.green, color.blue, 0.12),
-        border: pw.Border.all(color: color, width: 1.4),
-        borderRadius: pw.BorderRadius.circular(8),
-      ),
-      child: pw.Column(
+
+    return pw.Column(
+      children: [
+        pw.Text('PUNTUACIÓN GLOBAL',
+            style: pw.TextStyle(
+                fontSize: 8, color: PdfColors.grey700, letterSpacing: 0.6)),
+        pw.SizedBox(height: 8),
+        DonutPuntuacion(
+          porcentaje: r.puntuacionGlobal,
+          color: color,
+          nivel: r.nivel,
+        ),
+        if (r.totalCriticasFalladas > 0) ...[
+          pw.SizedBox(height: 8),
+          pw.Container(
+            width: 132,
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            color: PdfColors.red50,
+            child: pw.Text(
+              '${r.totalCriticasFalladas} incumplimiento(s) crítico(s)',
+              textAlign: pw.TextAlign.center,
+              style: pw.TextStyle(
+                  fontSize: 7.5,
+                  color: PdfColors.red800,
+                  fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Desglose por áreas en barras horizontales, ordenadas de peor a mejor.
+  ///
+  /// El orden no es cosmético: lo primero que hay que mirar es lo que peor
+  /// está, y ponerlo arriba ahorra tener que recorrer la lista buscándolo.
+  pw.Widget _barrasAreas(DatosReporte d) {
+    final areas = d.areas
+        .where((a) => d.resultado.areas[a.codigo] != null)
+        .toList()
+      ..sort((x, y) => (d.resultado.areas[x.codigo]!.porcentaje)
+          .compareTo(d.resultado.areas[y.codigo]!.porcentaje));
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        for (final a in areas) _barraArea(a, d.resultado.areas[a.codigo]!),
+      ],
+    );
+  }
+
+  pw.Widget _barraArea(AreaInfo area, ResultadoArea resultado) {
+    final color = _colorNota(resultado.porcentaje);
+    // En milésimas, porque el reparto entre Expanded va con enteros. Un área
+    // no evaluable (todo N/A) se pinta vacía, no a cero: no es un suspenso.
+    final relleno = resultado.evaluable
+        ? (resultado.porcentaje.clamp(0, 100) * 10).round()
+        : 0;
+
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 5),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
-          pw.Text('PUNTUACIÓN GLOBAL',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-          pw.SizedBox(height: 6),
-          pw.Text('${r.puntuacionGlobal.toStringAsFixed(1)}%',
-              style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: color)),
-          pw.Text('Nivel ${r.nivel}',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: color)),
-          if (r.totalCriticasFalladas > 0) ...[
-            pw.SizedBox(height: 8),
-            pw.Text('${r.totalCriticasFalladas} incumplimiento(s) crítico(s)',
-                textAlign: pw.TextAlign.center,
-                style: pw.TextStyle(
-                    fontSize: 8, color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
-          ],
+          pw.SizedBox(
+            width: 104,
+            child: pw.Text(area.nombre,
+                maxLines: 1,
+                overflow: pw.TextOverflow.clip,
+                style: pw.TextStyle(fontSize: 7.5)),
+          ),
+          pw.SizedBox(width: 6),
+          // La proporción se reparte entre dos Expanded en lugar de usar un
+          // ancho fraccionado: el paquete de PDF no trae ese widget, y los
+          // flex enteros dan el mismo resultado sin depender de medir el
+          // espacio disponible.
+          pw.Expanded(
+            child: pw.Row(
+              children: [
+                if (relleno > 0)
+                  pw.Expanded(
+                      flex: relleno,
+                      child: pw.Container(height: 9, color: color)),
+                if (relleno < 1000)
+                  pw.Expanded(
+                      flex: 1000 - relleno,
+                      child: pw.Container(height: 9, color: PdfColors.grey200)),
+              ],
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.SizedBox(
+            width: 34,
+            child: pw.Text(
+              resultado.evaluable
+                  ? '${resultado.porcentaje.toStringAsFixed(0)} %'
+                  : 'N/A',
+              textAlign: pw.TextAlign.right,
+              style: pw.TextStyle(
+                  fontSize: 8, fontWeight: pw.FontWeight.bold, color: color),
+            ),
+          ),
         ],
       ),
     );
@@ -590,11 +662,17 @@ class PdfBuilder {
     return mapa;
   }
 
+  /// Color por nivel, no por «bien o mal».
+  ///
+  /// Antes el verde llegaba hasta el 80 %, así que un notable justo se pintaba
+  /// igual que un sobresaliente y el informe entero salía en verde aunque
+  /// hubiera áreas al 75 %. Ahora cada tramo tiene su color y el verde queda
+  /// reservado al nivel A.
   static PdfColor _colorNota(double p) {
-    if (p >= 90) return PdfColors.green700;
-    if (p >= 80) return PdfColors.lightGreen800;
-    if (p >= 65) return PdfColors.orange800;
-    return PdfColors.red800;
+    if (p >= 90) return PdfColors.green700;   // A
+    if (p >= 80) return PdfColors.amber700;   // B
+    if (p >= 65) return PdfColors.orange800;  // C
+    return PdfColors.red800;                  // D
   }
 
   static String _fecha(DateTime d) {

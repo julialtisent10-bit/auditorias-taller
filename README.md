@@ -144,7 +144,7 @@ lib/
 │  ├─ centros/    alta de centros y su histórico
 │  ├─ plantillas/ carga y validación del cuestionario
 │  ├─ ranking/    clasificación entre centros
-│  └─ reporte/    generación del PDF y gráfico de araña
+│  └─ reporte/    generación del PDF: donut de puntuación y barras por área
 └─ shared/        widgets reutilizables
 ```
 
