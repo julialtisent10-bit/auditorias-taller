@@ -84,9 +84,10 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
                     style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ),
             const SizedBox(height: 12),
-            _SelectorRespuesta(
+            SelectorRespuesta(
               valor: valor,
               permiteNA: widget.pregunta.permiteNA,
+              permiteParcial: widget.pregunta.permiteParcial,
               onSeleccionar: (v) => controller.responder(widget.pregunta, v),
             ),
             const SizedBox(height: 6),
@@ -98,7 +99,7 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
                   label: Text(_comentario.text.isEmpty ? 'Comentario' : 'Comentario ✓'),
                 ),
                 const Spacer(),
-                _BotonEvidencia(
+                BotonEvidencia(
                   habilitado: evidencias.length < Respuesta.maxEvidencias,
                   onElegir: (desdeCamara) =>
                       controller.anadirEvidencia(widget.pregunta, desdeCamara: desdeCamara),
@@ -125,7 +126,7 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
                 ),
               ),
             if (evidencias.isNotEmpty)
-              _TiraEvidencias(
+              TiraEvidencias(
                 evidencias: evidencias,
                 onEliminar: (e) => controller.quitarEvidencia(widget.pregunta, e),
               ),
@@ -136,15 +137,27 @@ class _PreguntaCardState extends ConsumerState<PreguntaCard> {
   }
 }
 
-class _SelectorRespuesta extends StatelessWidget {
-  const _SelectorRespuesta({
+/// Selector de respuesta compartido: lo usa tanto el cuestionario de
+/// postventa (a través de [PreguntaCard]) como el módulo de seguridad, que
+/// tiene su propia tarjeta de pregunta porque no depende del controlador de
+/// auditoría. Es público a propósito para que ese otro módulo lo importe en
+/// lugar de reconstruir la misma lógica de chips y colores por su cuenta.
+class SelectorRespuesta extends StatelessWidget {
+  const SelectorRespuesta({
+    super.key,
     required this.valor,
     required this.permiteNA,
+    this.permiteParcial = true,
     required this.onSeleccionar,
   });
 
   final ValorRespuesta? valor;
   final bool permiteNA;
+
+  /// false oculta "Cumple parcialmente": el cuestionario de seguridad es
+  /// estrictamente Sí/No y esa opción no corresponde a ninguna respuesta
+  /// válida de su formulario original.
+  final bool permiteParcial;
   final ValueChanged<ValorRespuesta> onSeleccionar;
 
   static const _colores = {
@@ -165,6 +178,7 @@ class _SelectorRespuesta extends StatelessWidget {
   Widget build(BuildContext context) {
     final opciones = ValorRespuesta.values
         .where((v) => permiteNA || v != ValorRespuesta.noAplica)
+        .where((v) => permiteParcial || v != ValorRespuesta.parcial)
         .toList();
 
     return Wrap(
@@ -219,8 +233,12 @@ class _ChipPeso extends StatelessWidget {
   }
 }
 
-class _BotonEvidencia extends StatelessWidget {
-  const _BotonEvidencia({required this.habilitado, required this.onElegir});
+/// Botón de añadir foto, compartido con el módulo de seguridad por el mismo
+/// motivo que [SelectorRespuesta]: es la parte genérica (cámara/galería, el
+/// límite de evidencias lo decide quien lo usa), sin nada específico de
+/// auditorías de postventa.
+class BotonEvidencia extends StatelessWidget {
+  const BotonEvidencia({super.key, required this.habilitado, required this.onElegir});
 
   final bool habilitado;
 
@@ -251,8 +269,9 @@ class _BotonEvidencia extends StatelessWidget {
   }
 }
 
-class _TiraEvidencias extends StatelessWidget {
-  const _TiraEvidencias({required this.evidencias, required this.onEliminar});
+/// Tira horizontal de miniaturas, compartida con el módulo de seguridad.
+class TiraEvidencias extends StatelessWidget {
+  const TiraEvidencias({super.key, required this.evidencias, required this.onEliminar});
 
   final List<Evidencia> evidencias;
   final ValueChanged<Evidencia> onEliminar;

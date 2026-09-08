@@ -13,6 +13,7 @@ class Pregunta {
     this.peso = 1,
     this.critica = false,
     this.permiteNA = true,
+    this.permiteParcial = true,
     this.fotoObligatoriaSi = const [ValorRespuesta.noCumple],
   });
 
@@ -29,6 +30,12 @@ class Pregunta {
   /// Si es critica y se responde NO_CUMPLE, el area queda topada.
   final bool critica;
   final bool permiteNA;
+
+  /// false en cuestionarios estrictamente Sí/No, como el de seguridad: sin
+  /// este campo no habría forma de ocultar "Cumple parcialmente" y esas
+  /// preguntas tendrían una opción que no corresponde a ninguna respuesta
+  /// válida del formulario original.
+  final bool permiteParcial;
   final List<ValorRespuesta> fotoObligatoriaSi;
 
   bool exigeFoto(ValorRespuesta? v) => v != null && fotoObligatoriaSi.contains(v);
@@ -42,6 +49,7 @@ class Pregunta {
     int? peso,
     bool? critica,
     bool? permiteNA,
+    bool? permiteParcial,
     List<ValorRespuesta>? fotoObligatoriaSi,
   }) =>
       Pregunta(
@@ -58,6 +66,7 @@ class Pregunta {
         peso: peso ?? this.peso,
         critica: critica ?? this.critica,
         permiteNA: permiteNA ?? this.permiteNA,
+        permiteParcial: permiteParcial ?? this.permiteParcial,
         fotoObligatoriaSi: fotoObligatoriaSi ?? this.fotoObligatoriaSi,
       );
 
@@ -71,6 +80,7 @@ class Pregunta {
         'peso': peso,
         'critica': critica,
         'permiteNA': permiteNA,
+        'permiteParcial': permiteParcial,
         'fotoObligatoriaSi': fotoObligatoriaSi.map((v) => v.codigo).toList(),
         'activa': true,
       };
@@ -85,6 +95,7 @@ class Pregunta {
         peso: (j['peso'] as num?)?.toInt() ?? 1,
         critica: j['critica'] as bool? ?? false,
         permiteNA: j['permiteNA'] as bool? ?? true,
+        permiteParcial: j['permiteParcial'] as bool? ?? true,
         fotoObligatoriaSi: ((j['fotoObligatoriaSi'] as List?) ?? const ['NO_CUMPLE'])
             .map((c) => ValorRespuesta.desdeCodigo(c as String))
             .whereType<ValorRespuesta>()

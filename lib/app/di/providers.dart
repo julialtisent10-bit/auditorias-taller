@@ -14,6 +14,10 @@ import '../../features/centros/domain/entities/centro.dart';
 import '../../features/plantillas/data/repositories/plantilla_repository.dart';
 import '../../features/plantillas/domain/entities/plantilla.dart';
 import '../../features/reporte/domain/usecases/generar_reporte.dart';
+import '../../features/seguridad/data/repositories/plantilla_seguridad_repository.dart';
+import '../../features/seguridad/data/repositories/revision_seguridad_repository_impl.dart';
+import '../../features/seguridad/domain/entities/revision_seguridad.dart';
+import '../../features/seguridad/domain/repositories/revision_seguridad_repository.dart';
 
 /// Se sobrescribe en main() con la instancia ya inicializada.
 final almacenProvider = Provider<AlmacenBinarios>(
@@ -35,6 +39,39 @@ final auditoriaRepositoryProvider = Provider<AuditoriaRepository>((ref) {
 });
 
 final generarReporteProvider = Provider<GenerarReporte>((ref) => const GenerarReporte());
+
+// ------------------------------------------------------------- seguridad
+//
+// Módulo aparte: repositorio, plantilla y providers propios, sin tocar los
+// de auditoría. Ver README para la razón (minimizar riesgo sobre el flujo
+// de postventa, ya en producción).
+
+final plantillaSeguridadRepositoryProvider =
+    Provider<PlantillaSeguridadRepository>((ref) => PlantillaSeguridadRepository());
+
+final revisionSeguridadRepositoryProvider = Provider<RevisionSeguridadRepository>((ref) {
+  return RevisionSeguridadRepositoryImpl(
+    almacen: ref.watch(almacenProvider),
+    evidencias: ref.watch(evidenciaDataSourceProvider),
+  );
+});
+
+final plantillaSeguridadProvider = FutureProvider<Plantilla>(
+    (ref) => ref.watch(plantillaSeguridadRepositoryProvider).cargar());
+
+/// Histórico de revisiones de seguridad cerradas, de todos los centros.
+final historicoSeguridadProvider = StreamProvider<List<RevisionSeguridad>>(
+    (ref) => ref.watch(revisionSeguridadRepositoryProvider).historico());
+
+/// Revisiones de seguridad abiertas del usuario actual, para poder retomarlas.
+final enCursoSeguridadProvider = StreamProvider<List<RevisionSeguridad>>((ref) => ref
+    .watch(revisionSeguridadRepositoryProvider)
+    .enCurso(evaluadorUid: ref.watch(auditorUidProvider)));
+
+/// Cabecera de la revisión de seguridad en curso. Igual que
+/// `auditoriaActualProvider`: las respuestas viven aparte, en
+/// `sesionSeguridadAbiertaProvider`.
+final revisionSeguridadActualProvider = StateProvider<RevisionSeguridad?>((ref) => null);
 
 // ------------------------------------------------------------------- sesión
 

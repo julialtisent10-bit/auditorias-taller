@@ -23,6 +23,12 @@ service cloud.firestore {
           == request.auth.uid;
     }
 
+    function esMiRevisionSeguridad(revisionId) {
+      return autenticado() &&
+        get(/databases/$(database)/documents/revisionesSeguridad/$(revisionId)).data.evaluadorUid
+          == request.auth.uid;
+    }
+
     // Centros y plantillas son datos maestros compartidos.
     match /centros/{centroId} {
       allow read, write: if autenticado();
@@ -51,6 +57,22 @@ service cloud.firestore {
       match /respuestas/{preguntaId} {
         allow read: if autenticado();
         allow write: if esMiAuditoria(auditoriaId);
+      }
+    }
+
+    // Módulo aparte de auditorías: misma forma de reglas, colección propia.
+    match /revisionesSeguridad/{revisionId} {
+      allow read: if autenticado();
+
+      allow create: if autenticado()
+        && request.resource.data.evaluadorUid == request.auth.uid;
+
+      allow update, delete: if autenticado()
+        && resource.data.evaluadorUid == request.auth.uid;
+
+      match /respuestas/{preguntaId} {
+        allow read: if autenticado();
+        allow write: if esMiRevisionSeguridad(revisionId);
       }
     }
   }

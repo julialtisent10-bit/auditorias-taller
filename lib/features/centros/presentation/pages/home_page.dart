@@ -32,6 +32,8 @@ class HomePage extends ConsumerWidget {
                 Navigator.of(context).pushNamed('/historico');
               } else if (opcion == 'cuestionario') {
                 Navigator.of(context).pushNamed('/cuestionario/editar');
+              } else if (opcion == 'seguridad') {
+                Navigator.of(context).pushNamed('/seguridad/historico');
               } else if (opcion == 'salir') {
                 FirebaseAuth.instance.signOut();
               }
@@ -50,6 +52,14 @@ class HomePage extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.edit_note),
                   title: Text('Editar cuestionario'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'seguridad',
+                child: ListTile(
+                  leading: Icon(Icons.health_and_safety_outlined),
+                  title: Text('Revisión de seguridad'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -82,11 +92,27 @@ class HomePage extends ConsumerWidget {
               ),
             );
           }
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-            children: [
-              const _AvisoEnCurso(),
-              for (final centro in lista) _TarjetaCentro(centro: centro),
+          return CustomScrollView(
+            slivers: [
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
+                sliver: SliverToBoxAdapter(child: _AvisoEnCurso()),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _TarjetaCentro(centro: lista[i]),
+                    childCount: lista.length,
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -167,30 +193,48 @@ class _TarjetaCentro extends StatelessWidget {
     final tendencia = centro.resumen.tendencia;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => FichaCentroPage(centro: centro),
         )),
-        title: Text(centro.nombre, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-          puntuacion == null
-              ? 'Sin auditorías'
-              : 'Última auditoría: ${_fecha(centro.resumen.ultimaFecha)}',
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: puntuacion == null
-            ? const Icon(Icons.remove, color: Colors.grey)
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (tendencia != null) _Tendencia(valor: tendencia),
-                  const SizedBox(width: 8),
-                  Text('${puntuacion.toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                centro.nombre,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
+              const Spacer(),
+              if (puntuacion == null)
+                const Text('Sin auditorías',
+                    style: TextStyle(fontSize: 12, color: Colors.grey))
+              else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('${puntuacion.toStringAsFixed(1)}%',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    if (tendencia != null) ...[
+                      const SizedBox(width: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _Tendencia(valor: tendencia),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text('Última: ${_fecha(centro.resumen.ultimaFecha)}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
