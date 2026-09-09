@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/imagen_centro.dart';
 import '../../../../shared/widgets/error_datos.dart';
 import '../../../../shared/widgets/aviso_almacenamiento.dart';
 import '../../../auditoria/presentation/borrar_auditoria.dart';
@@ -198,41 +199,57 @@ class _TarjetaCentro extends StatelessWidget {
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => FichaCentroPage(centro: centro),
         )),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                centro.nombre,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+        child: Ink(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(assetImagenCentro(centro.nombre)),
+              fit: BoxFit.cover,
+              // Oscurece la foto para que el texto blanco siga siendo
+              // legible encima, sea cual sea la imagen del centro.
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.45),
+                BlendMode.darken,
               ),
-              const Spacer(),
-              if (puntuacion == null)
-                const Text('Sin auditorías',
-                    style: TextStyle(fontSize: 12, color: Colors.grey))
-              else ...[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('${puntuacion.toStringAsFixed(1)}%',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    if (tendencia != null) ...[
-                      const SizedBox(width: 6),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: _Tendencia(valor: tendencia),
-                      ),
-                    ],
-                  ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  centro.nombre,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14, color: Colors.white),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text('Última: ${_fecha(centro.resumen.ultimaFecha)}',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                const Spacer(),
+                if (puntuacion == null)
+                  const Text('Sin auditorías',
+                      style: TextStyle(fontSize: 12, color: Colors.white70))
+                else ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('${puntuacion.toStringAsFixed(1)}%',
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (tendencia != null) ...[
+                        const SizedBox(width: 6),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _Tendencia(valor: tendencia),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text('Última: ${_fecha(centro.resumen.ultimaFecha)}',
+                      style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
