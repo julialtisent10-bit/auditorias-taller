@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/providers.dart';
+import '../../../../shared/imagen_centro.dart';
 import '../../../../shared/widgets/error_datos.dart';
 import '../../../../shared/area_vista.dart';
 import '../../../centros/domain/entities/centro.dart';
@@ -96,28 +97,25 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
                   subtitle: Text('Crea el primero para poder auditarlo.'),
                 ),
               ),
-            // ListTile en lugar de RadioListTile: los parámetros `groupValue`
-            // y `onChanged` del radio quedaron deprecados en favor de un
-            // ancestro RadioGroup, y para una lista de media docena de
-            // centros no compensa montar esa maquinaria.
-            for (final c in lista)
-              ListTile(
-                selected: _centro?.id == c.id,
-                onTap: () => _seleccionar(c),
-                leading: Icon(
-                  _centro?.id == c.id
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: _centro?.id == c.id
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey,
+            if (lista.isNotEmpty)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 160,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1,
                 ),
-                title: Text(c.nombre),
-                subtitle: Text(
-                  c.resumen.ultimaPuntuacion == null
-                      ? 'Sin auditorías previas'
-                      : 'Última: ${c.resumen.ultimaPuntuacion!.toStringAsFixed(1)}%',
-                ),
+                itemCount: lista.length,
+                itemBuilder: (context, i) {
+                  final c = lista[i];
+                  return _TarjetaCentroSeleccionable(
+                    centro: c,
+                    seleccionado: _centro?.id == c.id,
+                    onTap: () => _seleccionar(c),
+                  );
+                },
               ),
             TextButton.icon(
               onPressed: _nuevoCentro,
@@ -287,6 +285,86 @@ class _InicioAuditoriaPageState extends ConsumerState<InicioAuditoriaPage> {
     final dd = d.day.toString().padLeft(2, '0');
     final mm = d.month.toString().padLeft(2, '0');
     return '$dd/$mm/${d.year}';
+  }
+}
+
+/// Tarjeta de centro seleccionable, con la misma foto de fondo que la
+/// pantalla principal, para elegir el centro a auditar tocándola.
+class _TarjetaCentroSeleccionable extends StatelessWidget {
+  const _TarjetaCentroSeleccionable({
+    required this.centro,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  final Centro centro;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorPrimario = Theme.of(context).colorScheme.primary;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: seleccionado
+            ? BorderSide(color: colorPrimario, width: 3)
+            : BorderSide.none,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(assetImagenCentro(centro.nombre)),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.45),
+                BlendMode.darken,
+              ),
+            ),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      centro.nombre,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Text(
+                      centro.resumen.ultimaPuntuacion == null
+                          ? 'Sin auditorías previas'
+                          : 'Última: ${centro.resumen.ultimaPuntuacion!.toStringAsFixed(1)}%',
+                      style: const TextStyle(fontSize: 10, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+              if (seleccionado)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: CircleAvatar(
+                    radius: 11,
+                    backgroundColor: colorPrimario,
+                    child: const Icon(Icons.check, size: 14, color: Colors.white),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
